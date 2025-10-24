@@ -53,3 +53,6 @@ Achievements — “First Win”, “100 Points”, “Flawless Victory”, etc.
 Battle History — last 5 results stored under your profile.
 
 Global Broadcasts — show “Event Battles” hosted by admins.
+
+67=200734
+TungTUngTungSahur
