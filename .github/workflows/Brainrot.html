@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brainrot bot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Quicksand:500,700&display=swap" rel="stylesheet">
+  <style>
+    html { box-sizing: border-box; }
+    *, *:before, *:after { box-sizing: inherit; }
+    body {
+      background: radial-gradient(circle at 60% 25%, #fff8e8 60%, #f5e2c1 100%);
+      font-family: 'Quicksand', Arial, sans-serif;
+      color: #3b2c11;
+      margin: 0;
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 480px;
+      margin: 44px auto 0;
+      padding: 0 18px 30px;
+      border-radius: 28px;
+      background: #fffaf1;
+      box-shadow: 0 8px 36px rgba(125,92,43,0.12), 0 2px 10px rgba(125,92,43,0.07);
+      position: relative;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      background: #fff8e1cc;
+      z-index: 10;
+      border-radius: 24px 24px 0 0;
+      padding-top: 10px;
+    }
+    .logo { display: flex; flex-direction: column; align-items: center; margin-top: 18px; margin-bottom: 6px; }
+    .logo svg { width: 59px; height: 59px; margin-bottom: 7px; filter: drop-shadow(0 1px 8px #e0c99199); }
+    h1 { text-align: center; color: #7d5c2b; font-size: 2.2em; font-weight: 700; margin: 3px 0 6px 0; letter-spacing: 0.04em; }
+    .subtitle { text-align: center; color: #b7a184; margin-bottom: 22px; font-size: 1.08em; font-weight: 500; letter-spacing: 0.02em; line-height: 1.5; }
+    .chat-window {
+      background: #f7f4eb; border-radius: 19px; padding: 16px 12px 10px 12px;
+      box-shadow: 0 2px 8px #bfa15d33; min-height: 180px; margin-bottom: 16px;
+      display: flex; flex-direction: column; gap: 9px; overflow-y: auto; max-height: 400px;
+    }
+    .chat-bubble {
+      max-width: 85%; padding: 12px 18px; margin: 10px 0;
+      border-radius: 16px 16px 16px 2px; box-shadow: 0 2px 8px #bfa15d26;
+      font-size: 1.13em; position: relative; word-break: break-word; animation: fadeInUp 0.5s;
+    }
+    .bot-bubble { background: #fff7e4; color: #a77a31; border-radius: 16px 16px 2px 16px; align-self: flex-start; border: 1.5px solid #e0c991; font-weight: 500; }
+    .user-bubble { background: #e0c991; color: #7d5c2b; border-radius: 16px 16px 16px 2px; align-self: flex-end; font-weight: 700; }
+    .chat-form { display: flex; gap: 8px; align-items: center; justify-content: center; }
+    .chat-input { flex: 1; padding: 10px 14px; border-radius: 13px; border: 1.5px solid #e0c991; font-size: 1.06em; background: #fff; }
+    .chat-send { background: #f9e5c1; color: #7d5c2b; font-weight: 700; border-radius: 13px; padding: 9px 20px; font-size: 1.02em; cursor: pointer; }
+    .clear-btn { background: #f6f3e7; color: #b7a184; font-weight: 700; border-radius: 12px; padding: 7px 14px; border: 2px solid #e0c991; margin: 12px auto 0; display: block; cursor: pointer; }
+    
+    .options-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      margin: 10px 0 14px 0;
+      max-height: 330px;
+      overflow-y: auto;
+    }
+    .option-btn {
+      background: #f9e5c1;
+      color: #7d5c2b;
+      font-weight: 700;
+      border-radius: 13px;
+      padding: 10px 12px;
+      font-size: 1em;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .option-btn:hover {
+      transform: scale(1.05);
+      background: #f7dca5;
+    }
+
+    .credits, footer { text-align: center; color: #b7a184; margin: 15px 0 7px; font-size: 1em; }
+    footer { border-top: 1px solid #e0c99155; padding-top: 7px; font-size: 0.96em; margin-top: 20px; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <svg viewBox="0 0 80 80">
+          <ellipse cx="40" cy="46" rx="29" ry="24" fill="#e0c991" stroke="#ba9b61" stroke-width="2"/>
+          <ellipse cx="40" cy="34" rx="18" ry="15" fill="#fff7e4" stroke="#b7a184" stroke-width="1.5"/>
+          <ellipse cx="32" cy="42" rx="3.5" ry="5" fill="#7d5c2b"/>
+          <ellipse cx="48" cy="42" rx="3.5" ry="5" fill="#7d5c2b"/>
+          <ellipse cx="40" cy="52" rx="6" ry="3" fill="#b7a184"/>
+          <ellipse cx="40" cy="26" rx="7" ry="4" fill="#ba9b61"/>
+          <rect x="36" y="18" width="8" height="10" rx="4" fill="#a77a31" stroke="#ba9b61" stroke-width="1"/>
+          <ellipse cx="40" cy="18" rx="4" ry="2" fill="#fff7e4" stroke="#b7a184" stroke-width="0.5"/>
+        </svg>
+        <h1>Brainrot bot</h1>
+      </div>
+      <div class="subtitle">Welcome to Brainrot bot!<br>Your friendly brainrotted chat assistant.<br>Ask anything about Brainrot.</div>
+    </header>
+    <main>
+      <div class="chat-window" id="chat-window">
+        <div class="bot-bubble chat-bubble">Hi! How can I help with your brainrot learning today?</div>
+      </div>
+      <div class="options-list" id="options-list"></div>
+      <form class="chat-form" id="chat-form">
+        <input type="text" id="chat-input" class="chat-input" placeholder="Type your brainrot or question..." required>
+        <button type="submit" class="chat-send">Send</button>
+      </form>
+      <button class="clear-btn" id="clear-btn" type="button">Clear chat</button>
+      <div class="credits">Brainrot bot — chatbot for Brainrot.<br>Made with ❤️ for Brainrotness.</div>
+    </main>
+    <footer>
+      &copy; 2025 Brainrot bot. All rights reserved. | Brainrots are for entertainment purposes only.
+    </footer>
+  </div>
+
+  <script>
+    const remedyOptions = [
+      { key: "67", label: "67" },
+      { key: "69", label: "69" },
+      { key: "tung_sahur", label: "Tung_Sahur" },
+      { key: "ohio", label: "Ohio" },
+      { key: "lowtaperfade", label: "LowTaperFade" },
+      { key: "quandaledingle", label: "QuandaleDingle" }
+    ];
+
+    const remedies = {
+      67: "67 is a meme tied to 69. Long ago 69 was a couple, but 7 had a crush on 6, so out of anger 7 8 9 — and that’s how 67 was born.",
+      69: "The meme 69 is very sus. 6 loved 9 very much, but jealous 7 ate 9 — ending their love story.",
+      tung_sahur: "In 1939, Baby Sahur was sent from the doomed Planet Sahura—after swallowing a powerful amulet—to Earth with other anomalies, where he grew up as part of the Italian Brainrot and set out to reunite with his parents and defeat Abonono Schimpazinono.",
+      ohio: "Ohio, aka Only in Ohio, is a surreal meme about strange and impossible things supposedly happening in the U.S. state of Ohio. It’s heavily tied to brainrot culture.",
+      lowtaperfade: "A low taper fade meme jokes about how guys treat this simple haircut like it’s a life-changing style or personality trait.",
+      quandaledingle: "Quandale Dingle emerged from internet culture, Specifically related to Goofy ahh and Fanum tax."
+    };
+
+    const chatWindow = document.getElementById('chat-window');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const optionsList = document.getElementById('options-list');
+    const clearBtn = document.getElementById('clear-btn');
+
+    function addBubble(text, sender="user") {
+      const bubble = document.createElement("div");
+      bubble.className = `${sender}-bubble chat-bubble`;
+      bubble.textContent = text;
+      chatWindow.appendChild(bubble);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function addBotBubble(text) {
+      const typingBubble = document.createElement("div");
+      typingBubble.className = "bot-bubble chat-bubble";
+      typingBubble.textContent = "Typing";
+      chatWindow.appendChild(typingBubble);
+
+      let dotCount = 1;
+      const dotInterval = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        typingBubble.textContent = "Typing" + ".".repeat(dotCount);
+      }, 500);
+
+      setTimeout(() => {
+        clearInterval(dotInterval);
+        typingBubble.remove();
+
+        const bubble = document.createElement("div");
+        bubble.className = "bot-bubble chat-bubble";
+        chatWindow.appendChild(bubble);
+
+        let i = 0;
+        function typing() {
+          if (i < text.length) {
+            bubble.textContent += text.charAt(i);
+            i++;
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            setTimeout(typing, 35);
+          }
+        }
+        typing();
+      }, 1200);
+    }
+
+    function brainrotReply(input) {
+      input = input.toLowerCase();
+      for (const key in remedies) {
+        if (input.includes(key)) return remedies[key];
+      }
+      if (/hi|hello|hey|yo|Yo/.test(input)) return "Yo! Drop your brainrot and I’ll explain it 😎";
+      if (/thank|thx|ty/.test(input)) return "No prob! Stay brainrotted 🧠🔥";
+      return "Sorry, I don’t know that brainrot. Check YouTube for the deep lore 👀";
+    }
+
+    chatForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
+      addBubble(text,"user");
+      chatInput.value = "";
+      const reply = brainrotReply(text);
+      addBotBubble(reply);
+    });
+
+    function renderOptions() {
+      optionsList.innerHTML = "";
+      remedyOptions.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.textContent = opt.label;
+        btn.addEventListener("click", () => {
+          addBubble(opt.label,"user");
+          const reply = brainrotReply(opt.key);
+          addBotBubble(reply);
+        });
+        optionsList.appendChild(btn);
+      });
+    }
+    renderOptions();
+
+    clearBtn.addEventListener('click', () => {
+      chatWindow.innerHTML = '<div class="bot-bubble chat-bubble">Hi! How can I help with your brainrot learning today?</div>';
+    });
+  </script>
+</body>
+</html>
