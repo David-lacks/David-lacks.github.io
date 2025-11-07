@@ -118,162 +118,189 @@
       &copy; 2025 Ayurbot. All rights reserved. | Remedies are for informational purposes only.
     </footer>
   </div>
+<script>
+  const remedyOptions = [
+    { key: "headache", label: "Headache" },
+    { key: "cold", label: "Cold" },
+    { key: "indigestion", label: "Indigestion" },
+    { key: "cough", label: "Cough" },
+    { key: "fever", label: "Fever" },
+    { key: "stress", label: "Stress" },
+    { key: "constipation", label: "Constipation" },
+    { key: "acne", label: "Acne" },
+    { key: "sorethroat", label: "Sore Throat" },
+    { key: "insomnia", label: "Insomnia" },
+    { key: "fatigue", label: "Fatigue" },
+    { key: "allergy", label: "Allergy" },
+    { key: "obesity", label: "Obesity" },
+    { key: "chickenpox", label: "Chickenpox" },
+    { key: "cholera", label: "Cholera" },
+    { key: "jaundice", label: "Jaundice" },
+    { key: "thyroid", label: "Thyroid" },
+    { key: "diabetes", label: "Diabetes" },
+    { key: "anaemia", label: "Anaemia" },
+    { key: "marasmus", label: "Marasmus" },
+    { key: "kwashiorkor", label: "Kwashiorkor" },
+    { key: "scurvy", label: "Scurvy" },
+    { key: "rickets", label: "Rickets" },
+    { key: "beriberi", label: "Beriberi" },
+    { key: "nightblindness", label: "Night Blindness" },
+    { key: "malaria", label: "Malaria" },
+    { key: "measles", label: "Measles" },
+    { key: "rashes", label: "Rashes" },
+    { key: "vomitting", label: "Vomitting" },
+    { key: "asthma", label: "Asthma" },
+    { key: "arthritis", label: "Arthritis" },
+    { key: "migraine", label: "Migraine" },
+    { key: "ulcer", label: "Ulcer" },
+    { key: "dandruff", label: "Dandruff" },
+    { key: "toothache", label: "Toothache" },
+    { key: "hairfall", label: "Hair Fall" },
+    { key: "heartburn", label: "Heartburn" },
+    { key: "gastritis", label: "Gastritis" },
+    { key: "hypertension", label: "Hypertension" },
+    { key: "depression", label: "Depression" },
+    { key: "anxiety", label: "Anxiety" },
+    { key: "jointpain", label: "Joint Pain" },
+    { key: "backpain", label: "Back Pain" }
+  ];
 
-  <script>
-    const remedyOptions = [
-      { key: "headache", label: "Headache" },
-      { key: "cold", label: "Cold" },
-      { key: "indigestion", label: "Indigestion" },
-      { key: "cough", label: "Cough" },
-      { key: "fever", label: "Fever" },
-      { key: "stress", label: "Stress" },
-      { key: "constipation", label: "Constipation" },
-      { key: "acne", label: "Acne" },
-      { key: "sorethroat", label: "Sore Throat" },
-      { key: "insomnia", label: "Insomnia" },
-      { key: "fatigue", label: "Fatigue" },
-      { key: "allergy", label: "Allergy" },
-      { key: "obesity", label: "Obesity" },
-      { key: "chickenpox", label: "Chickenpox" },
-      { key: "cholera", label: "Cholera" },
-      { key: "jaundice", label: "Jaundice" },
-      { key: "thyroid", label: "Thyroid" },
-      { key: "diabetes", label: "Diabetes" },
-      { key: "anaemia", label: "Anaemia" },
-      { key: "marasmus", label: "Marasmus" },
-      { key: "kwashiorkor", label: "Kwashiorkor" },
-      { key: "scurvy", label: "Scurvy" },
-      { key: "rickets", label: "Rickets" },
-      { key: "beriberi", label: "Beriberi" },
-      { key: "nightblindness", label: "Night Blindness" },
-      { key: "malaria", label: "Malaria" },
-      { key: "measles", label: "Measles" },
-      { key: "rashes", label: "Rashes" },
-      { key: "vomitting", label: "Vomitting" }
-    ];
+  const remedies = {
+    headache: "For headaches, apply a paste of sandalwood or ginger on your forehead. Drink warm water infused with tulsi leaves. 🌿",
+    cold: "Try a mix of ginger, honey, and black pepper in warm water. Steam inhalation with eucalyptus oil can help clear sinuses. 🍯🌱",
+    indigestion: "Sip warm cumin seed water or chew fresh ginger with salt before meals. 🫚",
+    cough: "Take turmeric and black pepper mixed in honey. Tulsi tea with ginger also helps. 🍵",
+    fever: "Drink a decoction of holy basil, black pepper, and ginger. Rest and hydrate. 💧",
+    stress: "Practice deep breathing, meditation, and drink ashwagandha tea. 🧘‍♂️",
+    constipation: "Eat ripe bananas, drink warm water with soaked raisins, or take triphala powder. 🥣",
+    acne: "Apply neem or turmeric paste. Drink water and avoid fried foods. 🌱",
+    sorethroat: "Gargle warm salt water, drink licorice or ginger tea. 🍵",
+    insomnia: "Massage feet with sesame oil. Drink warm milk with nutmeg. 🛌",
+    fatigue: "Drink amla juice, do yoga and pranayama. 🍏",
+    allergy: "Take turmeric with honey. Keep rooms dust-free, try nasal cleansing. 🌼",
+    obesity: "Practice yoga, brisk walk, drink lemon-honey water. Avoid fried/sweet foods. 🏃‍♂️🍋",
+    chickenpox: "Apply neem paste, bathe with neem water, drink coconut water. Consult doctor. 🌿🥥",
+    cholera: "Hydrate with ORS, drink pomegranate juice, buttermilk. Seek medical help. 💧🍶",
+    jaundice: "Use kutki, drink sugarcane juice, eat bitter gourd. Rest, avoid fatty foods. 🍃",
+    thyroid: "Eat iodine-rich foods, coconut oil, do yoga. Ashwagandha helps. 🥥🌱",
+    diabetes: "Use fenugreek, bitter gourd juice, amla. Avoid refined sugar. 🥒🍈",
+    anaemia: "Eat spinach, beetroot, dates, jaggery. Amla aids iron absorption. 🥬🍠",
+    marasmus: "Give balanced diet rich in calories, protein, nutrients. Milk, pulses, ghee help. 🥛",
+    kwashiorkor: "Add protein foods: lentils, beans, eggs, nuts. Add fruits. Seek doctor. 🥚",
+    scurvy: "Increase vitamin C foods: amla, orange, lemon, guava. 🍊",
+    rickets: "Eat calcium & vitamin D foods: milk, eggs, cheese. Get sunlight. ☀️",
+    beriberi: "Eat vitamin B1 foods: whole grains, seeds, nuts, legumes. 🌾",
+    nightblindness: "Eat vitamin A foods: carrot, spinach, mango, sweet potato. 🥕",
+    malaria: "Neem leaves, tulsi tea, cinnamon with honey, and fluids help manage symptoms. 🌿",
+    measles: "Neem bath, turmeric milk, honey water, and light foods like khichdi. 🍲",
+    rashes: "Apply sandalwood paste, neem oil, or aloe vera gel for soothing relief. 🌱",
+    vomitting: "For vomiting, Ayurveda suggests sipping ginger juice with honey or cumin seed water to calm the stomach naturally.",
+    asthma: "Boil tulsi leaves, black pepper, and ginger in water. Inhale steam and drink warm ginger tea regularly. 🌿",
+    arthritis: "Massage with warm sesame oil and take turmeric milk daily. Avoid cold foods. 🦵",
+    migraine: "Apply sandalwood paste to forehead, practice deep breathing, and drink ginger tea. 🌺",
+    ulcer: "Drink aloe vera juice or coconut water; avoid spicy foods. 🌴",
+    dandruff: "Apply neem oil or lemon juice mixed with coconut oil to scalp before bath. 💆‍♀️",
+    toothache: "Rinse mouth with clove oil or salt water. Chew guava leaves for relief. 🌿",
+    hairfall: "Massage scalp with bhringraj or amla oil. Eat protein and vitamin E rich foods. 💇‍♀️",
+    heartburn: "Drink cold milk or chew fennel seeds after meals. Avoid spicy food. 🥛",
+    gastritis: "Have small frequent meals. Drink tender coconut water or aloe vera juice. 🌴",
+    hypertension: "Practice meditation, eat garlic and amla. Avoid salty and fried foods. 🧘‍♂️",
+    depression: "Drink ashwagandha tea, do yoga and pranayama daily. 🌼",
+    anxiety: "Tulsi tea, breathing exercises, and warm milk with nutmeg calm the mind. ☕",
+    jointpain: "Massage with castor oil or sesame oil. Take turmeric and ginger regularly. 💪",
+    backpain: "Apply warm sesame oil, do gentle yoga stretches, and rest well. 🧘‍♀️"
+  };
 
-    const remedies = {
-      headache: "For headaches, apply a paste of sandalwood or ginger on your forehead. Drink warm water infused with tulsi leaves. 🌿",
-      cold: "Try a mix of ginger, honey, and black pepper in warm water. Steam inhalation with eucalyptus oil can help clear sinuses. 🍯🌱",
-      indigestion: "Sip warm cumin seed water or chew fresh ginger with salt before meals. 🫚",
-      cough: "Take turmeric and black pepper mixed in honey. Tulsi tea with ginger also helps. 🍵",
-      fever: "Drink a decoction of holy basil, black pepper, and ginger. Rest and hydrate. 💧",
-      stress: "Practice deep breathing, meditation, and drink ashwagandha tea. 🧘‍♂️",
-      constipation: "Eat ripe bananas, drink warm water with soaked raisins, or take triphala powder. 🥣",
-      acne: "Apply neem or turmeric paste. Drink water and avoid fried foods. 🌱",
-      sorethroat: "Gargle warm salt water, drink licorice or ginger tea. 🍵",
-      insomnia: "Massage feet with sesame oil. Drink warm milk with nutmeg. 🛌",
-      fatigue: "Drink amla juice, do yoga and pranayama. 🍏",
-      allergy: "Take turmeric with honey. Keep rooms dust-free, try nasal cleansing. 🌼",
-      obesity: "Practice yoga, brisk walk, drink lemon-honey water. Avoid fried/sweet foods. 🏃‍♂️🍋",
-      chickenpox: "Apply neem paste, bathe with neem water, drink coconut water. Consult doctor. 🌿🥥",
-      cholera: "Hydrate with ORS, drink pomegranate juice, buttermilk. Seek medical help. 💧🍶",
-      jaundice: "Use kutki, drink sugarcane juice, eat bitter gourd. Rest, avoid fatty foods. 🍃",
-      thyroid: "Eat iodine-rich foods, coconut oil, do yoga. Ashwagandha helps. 🥥🌱",
-      diabetes: "Use fenugreek, bitter gourd juice, amla. Avoid refined sugar. 🥒🍈",
-      anaemia: "Eat spinach, beetroot, dates, jaggery. Amla aids iron absorption. 🥬🍠",
-      marasmus: "Give balanced diet rich in calories, protein, nutrients. Milk, pulses, ghee help. 🥛",
-      kwashiorkor: "Add protein foods: lentils, beans, eggs, nuts. Add fruits. Seek doctor. 🥚",
-      scurvy: "Increase vitamin C foods: amla, orange, lemon, guava. 🍊",
-      rickets: "Eat calcium & vitamin D foods: milk, eggs, cheese. Get sunlight. ☀️",
-      beriberi: "Eat vitamin B1 foods: whole grains, seeds, nuts, legumes. 🌾",
-      nightblindness: "Eat vitamin A foods: carrot, spinach, mango, sweet potato. 🥕",
-      malaria: "Neem leaves, tulsi tea, cinnamon with honey, and fluids help manage symptoms. 🌿",
-      measles: "Neem bath, turmeric milk, honey water, and light foods like khichdi. 🍲",
-      rashes: "Apply sandalwood paste, neem oil, or aloe vera gel for soothing relief. 🌱",
-      vomitting: "For vomiting, Ayurveda suggests sipping ginger juice with honey or cumin seed water to calm the stomach naturally."
-    };
+  const chatWindow = document.getElementById('chat-window');
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const optionsList = document.getElementById('options-list');
+  const clearBtn = document.getElementById('clear-btn');
 
-    const chatWindow = document.getElementById('chat-window');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const optionsList = document.getElementById('options-list');
-    const clearBtn = document.getElementById('clear-btn');
+  function addBubble(text, sender = "user") {
+    const bubble = document.createElement("div");
+    bubble.className = `${sender}-bubble chat-bubble`;
+    bubble.textContent = text;
+    chatWindow.appendChild(bubble);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
 
-    function addBubble(text, sender="user") {
+  function addBotBubble(text) {
+    const typingBubble = document.createElement("div");
+    typingBubble.className = "bot-bubble chat-bubble";
+    typingBubble.textContent = "Typing";
+    chatWindow.appendChild(typingBubble);
+
+    let dotCount = 0;
+    const dotInterval = setInterval(() => {
+      dotCount = (dotCount + 1) % 4;
+      typingBubble.textContent = "Typing" + ".".repeat(dotCount);
+    }, 500);
+
+    setTimeout(() => {
+      clearInterval(dotInterval);
+      typingBubble.remove();
+
       const bubble = document.createElement("div");
-      bubble.className = `${sender}-bubble chat-bubble`;
-      bubble.textContent = text;
+      bubble.className = "bot-bubble chat-bubble";
       chatWindow.appendChild(bubble);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
 
-    function addBotBubble(text) {
-      const typingBubble = document.createElement("div");
-      typingBubble.className = "bot-bubble chat-bubble";
-      typingBubble.textContent = "Typing";
-      chatWindow.appendChild(typingBubble);
-
-      let dotCount = 0;
-      const dotInterval = setInterval(() => {
-        dotCount = (dotCount + 1) % 4;
-        typingBubble.textContent = "Typing" + ".".repeat(dotCount);
-      }, 500);
-
-      setTimeout(() => {
-        clearInterval(dotInterval);
-        typingBubble.remove();
-
-        const bubble = document.createElement("div");
-        bubble.className = "bot-bubble chat-bubble";
-        chatWindow.appendChild(bubble);
-
-        let i = 0;
-        function typing() {
-          if (i < text.length) {
-            bubble.textContent += text.charAt(i);
-            i++;
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            setTimeout(typing, 35);
-          }
+      let i = 0;
+      function typing() {
+        if (i < text.length) {
+          bubble.textContent += text.charAt(i);
+          i++;
+          chatWindow.scrollTop = chatWindow.scrollHeight;
+          setTimeout(typing, 35);
         }
-        typing();
-      }, 1200);
-    }
-
-    function ayurbotReply(input) {
-      input = input.toLowerCase();
-      for (const key in remedies) {
-        if (input.includes(key)) return remedies[key];
-        if (key==="sorethroat" && (input.includes("sore throat")||input.includes("throat pain"))) return remedies[key];
-        if (key==="chickenpox" && input.includes("chicken pox")) return remedies[key];
-        if (key==="beriberi" && (input.includes("beri beri")||input.includes("beri-beri"))) return remedies[key];
       }
-      if (/hi|hello|hey/.test(input)) return "Namaste! Share your symptoms and I'll suggest an Ayurvedic remedy. 🙏";
-      if (/thank/.test(input)) return "You're welcome! Stay healthy with Ayurveda. 🌿";
-      return "Sorry, I don't know a remedy for that. Please consult a qualified doctor for proper advice. 🙏";
+      typing();
+    }, 1200);
+  }
+
+  function ayurbotReply(input) {
+    input = input.toLowerCase();
+    for (const key in remedies) {
+      if (input.includes(key)) return remedies[key];
+      if (key === "sorethroat" && (input.includes("sore throat") || input.includes("throat pain"))) return remedies[key];
+      if (key === "chickenpox" && input.includes("chicken pox")) return remedies[key];
+      if (key === "beriberi" && (input.includes("beri beri") || input.includes("beri-beri"))) return remedies[key];
     }
+    if (/hi|hello|hey/.test(input)) return "Namaste! Share your symptoms and I'll suggest an Ayurvedic remedy. 🙏";
+    if (/thank/.test(input)) return "You're welcome! Stay healthy with Ayurveda. 🌿";
+    return "Sorry, I don't know a remedy for that. Please consult a qualified doctor for proper advice. 🙏";
+  }
 
-    chatForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const text = chatInput.value.trim();
-      if (!text) return;
-      addBubble(text,"user");
-      chatInput.value = "";
-      const reply = ayurbotReply(text);
-      addBotBubble(reply);
-    });
+  chatForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+    addBubble(text, "user");
+    chatInput.value = "";
+    const reply = ayurbotReply(text);
+    addBotBubble(reply);
+  });
 
-    function renderOptions() {
-      optionsList.innerHTML = "";
-      remedyOptions.forEach(opt => {
-        const btn = document.createElement("button");
-        btn.className = "option-btn";
-        btn.textContent = opt.label;
-        btn.addEventListener("click", () => {
-          addBubble(opt.label,"user");
-          const reply = ayurbotReply(opt.key);
-          addBotBubble(reply);
-        });
-        optionsList.appendChild(btn);
+  function renderOptions() {
+    optionsList.innerHTML = "";
+    remedyOptions.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.textContent = opt.label;
+      btn.addEventListener("click", () => {
+        addBubble(opt.label, "user");
+        const reply = ayurbotReply(opt.key);
+        addBotBubble(reply);
       });
-    }
-    renderOptions();
-
-    clearBtn.addEventListener('click', () => {
-      chatWindow.innerHTML = '<div class="bot-bubble chat-bubble">Hi! How can I help with your well-being today?</div>';
+      optionsList.appendChild(btn);
     });
-  </script>
+  }
+  renderOptions();
+
+  clearBtn.addEventListener('click', () => {
+    chatWindow.innerHTML = '<div class="bot-bubble chat-bubble">Hi! How can I help with your well-being today?</div>';
+  });
+</script>
 </body>
 </html>
 
