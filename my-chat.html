@@ -3,201 +3,289 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat</title>
+  <title>Chat — All-in-One (Login · Chat · Profile)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <style>
     :root{
-      --bg:#0f1720;
-      --sidebar:#0b1220;
-      --muted:#8a98a8;
-      --accent:#5865f2;
-      --panel:#111622;
-      --panel-2:#0f1622;
-      --white:#e6eef6;
-      --danger:#ff6b6b;
+      --bg:#07101a; --sidebar:#0b1220; --panel:#111622; --muted:#9aa3ad; --accent:#5865f2; --white:#e6eef6;
+      --input:#0f1622; --danger:#ff6b6b;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      background:linear-gradient(180deg,#07101a 0%, #071425 100%);
-      color:var(--white);
-      height:100vh;
-      display:flex;
-      align-items:stretch;
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#071425);color:var(--white);min-height:100vh}
+    a{color:inherit}
+
+    /* Layout */
+    .app{display:flex;min-height:100vh}
+    /* left servers */
+    .servers{width:72px;background:linear-gradient(180deg,var(--sidebar),#05070a);padding:8px;display:flex;flex-direction:column;gap:10px;align-items:center;border-right:1px solid rgba(255,255,255,0.03)}
+    .server{width:48px;height:48px;border-radius:12px;background:linear-gradient(180deg,#26303b,#1b2228);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:18px;cursor:pointer;border:2px solid transparent}
+    .server.active{border-color:rgba(88,101,242,0.8)}
+
+    /* channels */
+    .channels{width:260px;background:var(--panel);padding:12px;border-right:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:10px}
+    .channels header{display:flex;justify-content:space-between;align-items:center}
+    .channel-list{margin-top:8px;display:flex;flex-direction:column;gap:6px;overflow:auto}
+    .channel{padding:8px;border-radius:6px;color:var(--muted);cursor:pointer}
+    .channel.active{background:rgba(88,101,242,0.12);color:var(--white)}
+
+    /* main chat */
+    .chat{flex:1;display:flex;flex-direction:column}
+    .chat-header{height:64px;display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .messages{flex:1;padding:20px;overflow:auto;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
+    .composer{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.03);display:flex;gap:12px;align-items:center}
+    .input{flex:1;background:linear-gradient(180deg,#0f1622,#0b1220);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);color:var(--white)}
+    .btn{background:var(--accent);border:none;color:white;padding:10px 12px;border-radius:8px;cursor:pointer}
+
+    /* members */
+    .members{width:220px;padding:12px;background:var(--panel);border-left:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:10px}
+
+    /* views (login/profile/chat) */
+    .view{display:none;padding:20px}
+    .view.active{display:block}
+
+    /* login card */
+    .card{max-width:540px;margin:40px auto;background:linear-gradient(180deg,#2b2d31,#242629);border-radius:12px;padding:22px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 8px 30px rgba(2,6,23,0.5)}
+    label{display:block;margin-top:12px;font-size:13px;color:var(--muted)}
+    .field{width:100%;background:var(--input);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.03);color:var(--white);margin-top:8px;font-size:15px}
+    .row{display:flex;gap:8px}
+    .small-select{flex:1;background:var(--input);border-radius:10px;padding:12px;color:var(--white);border:1px solid rgba(255,255,255,0.03)}
+    .muted{font-size:12px;color:var(--muted);margin-top:8px}
+
+    /* profile layout */
+    .wrap{max-width:1100px;margin:28px auto;display:flex;gap:20px}
+    .left{width:320px;background:var(--panel);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)}
+    .right{flex:1;background:var(--panel);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)}
+    .avatar{width:96px;height:96px;border-radius:16px;background:linear-gradient(180deg,#334155,#1f2937);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:36px;margin-bottom:10px}
+
+    /* top nav for single-file app */
+    .topbar{height:56px;background:linear-gradient(180deg,#07131a,#051018);display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .brand{font-weight:700;margin-right:12px}
+    .nav{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+    /* responsive (mobile similar to Discord) */
+    @media (max-width:900px){
+      .channels{display:none}
+      .members{display:none}
+      .servers{width:60px;position:fixed;left:0;top:0;bottom:0}
+      .chat{margin-left:60px}
+      .wrap{flex-direction:column;padding:12px}
+      .card{margin:12px auto;width:96%}
     }
-    .servers{ width:72px; background:linear-gradient(180deg,var(--sidebar), #05070a); padding:8px; display:flex; flex-direction:column; gap:10px; align-items:center; border-right:1px solid rgba(255,255,255,0.03); }
-    .server{ width:48px; height:48px; border-radius:12px; background:linear-gradient(180deg,#26303b,#1b2228); display:flex; align-items:center; justify-content:center; color:var(--white); font-weight:700; font-size:18px; cursor:pointer; border:2px solid transparent; }
-    .server.active{ border-color:rgba(88,101,242,0.8); box-shadow:0 4px 12px rgba(88,101,242,0.08); }
-
-    .channels{ width:260px; background:var(--panel); padding:16px; border-right:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:10px; }
-    .channels header{ display:flex; justify-content:space-between; align-items:center; gap:6px; }
-    .channels h3{ margin:0; font-size:13px; color:var(--white); }
-    .channels .sub{ font-size:12px; color:var(--muted); margin-top:6px; }
-    .channel-list{ margin-top:8px; display:flex; flex-direction:column; gap:6px; overflow:auto; padding-bottom:12px; }
-    .channel{ padding:6px 8px; border-radius:6px; color:var(--muted); display:flex; gap:8px; align-items:center; cursor:pointer; }
-    .channel:hover{ background:rgba(255,255,255,0.02); color:var(--white) }
-    .channel.active{ background:rgba(88,101,242,0.12); color:var(--white); }
-
-    .chat{ flex:1; display:flex; flex-direction:column; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
-    .chat-header{ height:64px; display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.03); gap:12px; }
-    .channel-title{ font-weight:600; font-size:16px; }
-    .topic{ color:var(--muted); font-size:13px; }
-
-    .messages{ flex:1; padding:24px 28px; overflow:auto; background: radial-gradient(circle at 10% 10%, rgba(255,255,255,0.012), transparent 8%), linear-gradient(180deg, rgba(255,255,255,0.004), transparent); }
-    .message{ display:flex; gap:12px; margin-bottom:14px; align-items:flex-start; }
-    .avatar{ width:40px; height:40px; border-radius:8px; background:linear-gradient(180deg,#334155,#1f2937); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--white); font-size:14px; flex-shrink:0; }
-    .message .meta{ display:flex; gap:8px; align-items:center; margin-bottom:4px; }
-    .author{ font-weight:600; color:var(--white); font-size:13px; }
-    .ts{ font-size:12px; color:var(--muted); }
-    .text{ color:var(--white); font-size:14px; line-height:1.4; }
-
-    .composer{ padding:12px 16px; border-top:1px solid rgba(255,255,255,0.03); display:flex; gap:12px; align-items:center; }
-    .input{ background:var(--panel-2); border-radius:8px; padding:10px 12px; flex:1; color:var(--white); border:1px solid rgba(255,255,255,0.02); }
-    .btn{ background:var(--accent); border:none; color:white; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-
-    .members{ width:220px; padding:12px; background:var(--panel); border-left:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:10px; }
-    .member{ display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; }
-    .member .avatar{ width:32px; height:32px; border-radius:6px; font-size:13px; }
-
-    .overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)); z-index:50; padding:20px; }
-    .card{ width:420px; background:linear-gradient(180deg,#0b1220,#07101a); border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
-    .card h2{ margin:0 0 8px 0; font-size:20px }
-    .card p{ margin:0 0 16px 0; color:var(--muted) }
-    .auth-actions{ display:flex; gap:8px; margin-bottom:12px; }
-    .field{ width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--white) }
-    .small{ font-size:12px; color:var(--muted); margin-top:8px; text-align:center }
-
-    @media (max-width:900px){ .channels{ display:none } .members{ display:none } .servers{ width:60px } }
+    @media (max-width:520px){
+      .card{padding:16px}
+      .field{padding:10px}
+      .btn{padding:12px}
+    }
   </style>
 </head>
 <body>
-  <div class="servers" id="servers">
-    <div class="server active">C</div>
-    <div class="server">G</div>
-    <div class="server">D</div>
-    <div class="server">+</div>
-  </div>
-
-  <div class="channels" id="channels">
-    <header>
-      <div>
-        <h3>My Community</h3>
-        <div class="sub" id="userState">Not signed in</div>
-      </div>
-      <button class="btn" id="signToggle">Sign in</button>
-    </header>
-
-    <div style="margin-top:8px; font-size:12px; color:var(--muted)">Text Channels</div>
-    <div class="channel-list" id="channelList">
-      <div class="channel active" data-room="general"># general</div>
-      <div class="channel" data-room="random"># random</div>
-      <div class="channel" data-room="help"># help</div>
+  <!-- topbar -->
+  <div class="topbar" id="topbar" style="display:none">
+    <div class="brand">Chat</div>
+    <div id="topRoom" style="font-weight:600;"></div>
+    <div class="nav">
+      <div id="topUser" style="color:var(--muted)"></div>
+      <button id="goProfile" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Profile</button>
+      <button id="goHome" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Home</button>
+      <button id="signOutTop" class="btn" style="background:var(--danger);display:none">Sign out</button>
     </div>
   </div>
 
-  <main class="chat">
-    <div class="chat-header">
-      <div>
-        <div class="channel-title" id="roomTitle"># general</div>
-        <div class="topic" id="roomTopic">Welcome</div>
+  <!-- MAIN: we'll show either the combined app UI (chat) or the login/profile "pages" -->
+  <main id="appRoot">
+
+    <!-- LOGIN / SIGNUP view (single page form) -->
+    <section id="view-login" class="view active">
+      <div class="card" role="main">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div id="tabSignUp" style="flex:1;padding:10px;border-radius:10px;text-align:center;background:rgba(255,255,255,0.03);cursor:pointer;font-weight:600">Create Account</div>
+          <div id="tabSignIn" style="flex:1;padding:10px;border-radius:10px;text-align:center;background:transparent;cursor:pointer;color:var(--muted)">Sign In</div>
+        </div>
+
+        <!-- Sign Up -->
+        <div id="signupForm">
+          <h2 style="margin:0 0 6px 0">Create an account</h2>
+          <p class="muted">Make an account to join the chat.</p>
+
+          <label>Email *</label>
+          <input id="suEmail" class="field" type="email" autocomplete="email" />
+
+          <label>Display Name</label>
+          <input id="suDisplayName" class="field" placeholder="What others will see" />
+
+          <label>Username *</label>
+          <input id="suUsername" class="field" placeholder="username (no spaces)" />
+
+          <label>Password *</label>
+          <input id="suPassword" class="field" type="password" autocomplete="new-password" />
+
+          <label>Date of Birth *</label>
+          <div class="row" style="margin-top:8px">
+            <select id="dobMonth" class="small-select">
+              <option value="">Month</option>
+              <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option>
+              <option>Jul</option><option>Aug</option><option>Sep</option><option>Oct</option><option>Nov</option><option>Dec</option>
+            </select>
+            <select id="dobDay" class="small-select"><option value="">Day</option></select>
+            <select id="dobYear" class="small-select"><option value="">Year</option></select>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+            <input id="marketingOpt" type="checkbox" checked />
+            <div class="muted">It's okay to send me updates and tips.</div>
+          </div>
+
+          <button id="createAccountBtn" class="btn" style="margin-top:16px">Create Account</button>
+          <div class="muted" style="text-align:center;margin-top:12px">By clicking "Create Account", you agree to the Terms of Service and Privacy Policy.</div>
+          <div style="text-align:center;margin-top:10px"><button id="googleSignUp" class="btn" style="background:rgba(255,255,255,0.06)">Sign in with Google</button></div>
+        </div>
+
+        <!-- Sign In -->
+        <div id="signinForm" style="display:none">
+          <h2 style="margin:0 0 6px 0">Sign in</h2>
+          <p class="muted">Welcome back — sign in to continue.</p>
+
+          <label>Email</label>
+          <input id="siEmail" class="field" type="email" />
+
+          <label>Password</label>
+          <input id="siPassword" class="field" type="password" />
+
+          <button id="signInBtn" class="btn" style="margin-top:12px">Sign In</button>
+
+          <div style="display:flex;justify-content:space-between;margin-top:12px">
+            <div class="muted">Need help? <span id="forgot" style="text-decoration:underline;cursor:pointer">Forgot password</span></div>
+            <div><button id="backToChat" class="btn" style="background:rgba(255,255,255,0.06)">Back to Chat</button></div>
+          </div>
+
+          <div style="text-align:center;margin-top:10px"><button id="googleSignIn" class="btn" style="background:rgba(255,255,255,0.06)">Sign in with Google</button></div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="messages" id="messages"></div>
+    <!-- CHAT view (main app UI) -->
+    <section id="view-chat" class="view">
+      <div class="app">
+        <div class="servers" aria-hidden="true">
+          <div class="server active">C</div>
+          <div class="server">G</div>
+          <div class="server">D</div>
+          <div class="server">+</div>
+        </div>
 
-    <div class="composer">
-      <input id="messageInput" class="input" placeholder="Message #general" />
-      <button class="btn" id="sendBtn">Send</button>
-    </div>
+        <div class="channels" id="channelsPane">
+          <header>
+            <div>
+              <h3 style="margin:0">Community</h3>
+              <div id="userState" style="color:var(--muted);font-size:13px">Not signed in</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button id="profileBtn" class="btn" style="background:rgba(255,255,255,0.06)">Profile</button>
+              <button id="signToggle" class="btn" style="background:rgba(255,255,255,0.06)">Sign in</button>
+            </div>
+          </header>
+
+          <div style="margin-top:8px;color:var(--muted);font-size:12px">Text Channels</div>
+          <div class="channel-list" id="channelList">
+            <div class="channel active" data-room="general"># general</div>
+            <div class="channel" data-room="random"># random</div>
+            <div class="channel" data-room="help"># help</div>
+          </div>
+        </div>
+
+        <main class="chat">
+          <div class="chat-header">
+            <div>
+              <div id="roomTitle" style="font-weight:600"># general</div>
+              <div id="roomTopic" style="color:var(--muted);font-size:13px">Welcome</div>
+            </div>
+          </div>
+
+          <div class="messages" id="messages"></div>
+
+          <div class="composer">
+            <input id="messageInput" class="input" placeholder="Message #general" />
+            <button id="sendBtn" class="btn">Send</button>
+          </div>
+        </main>
+
+        <aside class="members" id="membersPane">
+          <div style="font-weight:600">Members</div>
+          <div id="memberList"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- PROFILE view -->
+    <section id="view-profile" class="view">
+      <div class="wrap">
+        <aside class="left">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div id="avatarPreview" class="avatar">U</div>
+            <input id="fileInput" type="file" accept="image/*" style="display:none" />
+            <button id="changePicBtn" class="btn" style="width:100%">Change Profile Picture</button>
+            <div class="muted" style="text-align:center;margin-top:8px">Accepted: JPG, PNG. Max recommended 5 MB.</div>
+          </div>
+        </aside>
+
+        <section class="right">
+          <h2>Profile Settings</h2>
+
+          <label>Display name</label>
+          <input id="displayName" class="field"/>
+
+          <label>Username</label>
+          <input id="username" class="field" placeholder="username (no spaces)"/>
+
+          <div style="display:flex;gap:8px">
+            <button id="saveProfileBtn" class="btn">Save</button>
+            <button id="signOutBtn" class="btn" style="background:var(--danger);margin-left:auto">Sign out</button>
+          </div>
+
+          <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:16px 0">
+
+          <h3>Security</h3>
+          <label>Change Email</label>
+          <input id="newEmail" class="field" placeholder="new-email@example.com" />
+          <label>Current password (required to re-authenticate)</label>
+          <input id="reauthPassword" class="field" type="password" placeholder="Current password" />
+          <button id="changeEmailBtn" class="btn">Change Email</button>
+          <div class="muted">You will be signed out after changing email.</div>
+
+          <label style="margin-top:12px">Change Password</label>
+          <input id="newPassword" class="field" type="password" placeholder="New password" />
+          <button id="changePasswordBtn" class="btn">Change Password</button>
+
+          <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:16px 0">
+
+          <h3>Account</h3>
+          <button id="deleteAccountBtn" class="btn" style="background:var(--danger)">Delete Account</button>
+          <div class="muted">Delete removes your account and messages. This action cannot be undone.</div>
+        </section>
+      </div>
+    </section>
+
   </main>
 
-  <aside class="members" id="members">
-    <div style="font-weight:600">Members</div>
-    <div id="memberList">
-      <div class="member"><div class="avatar">A</div><div>Anonymous</div></div>
-    </div>
-  </aside>
-
-  <!-- Auth overlay -->
-  <div class="overlay" id="authOverlay" style="display:none">
-    <div class="card">
-      <h2>Sign in</h2>
-      <p>Sign in with Google or email/password.</p>
-
-      <div class="auth-actions">
-        <button class="btn" id="googleSign">Sign in with Google</button>
-        <button class="btn" id="signOutBtn" style="display:none;background:var(--danger)">Sign out</button>
-      </div>
-
-      <div style="display:flex; gap:8px; margin-top:8px">
-        <input id="emailInput" class="field" placeholder="Email" />
-        <input id="passInput" class="field" placeholder="Password" type="password" />
-      </div>
-
-      <div style="display:flex; gap:8px; margin-top:8px">
-        <button class="btn" id="emailSignUp">Create</button>
-        <button class="btn" id="emailSignIn">Sign in</button>
-      </div>
-
-      <div class="small">The app uses Firebase Authentication email verification.</div>
-    </div>
-  </div>
-
-  <!-- Verify overlay -->
-  <div class="overlay" id="verifyOverlay" style="display:none">
-    <div class="card">
-      <h2>Verify your email</h2>
-      <p>We sent a verification email. Click the link in the email, then click "I verified".</p>
-      <div style="display:flex; gap:8px; margin-top:12px">
-        <button class="btn" id="iVerifiedBtn">I verified</button>
-        <button class="btn" id="resendVerifyBtn" style="background:rgba(255,255,255,0.06)">Resend</button>
-      </div>
-      <div class="small" id="verifyInfo"></div>
-    </div>
-  </div>
-
-  <!-- Username modal -->
-  <div class="overlay" id="usernameOverlay" style="display:none">
-    <div class="card">
-      <h2>Choose your username</h2>
-      <p>Pick a display name that others will see.</p>
-      <input id="usernameInput" class="field" placeholder="Username" />
-      <div style="display:flex; gap:8px; margin-top:12px">
-        <button class="btn" id="setUsernameBtn">Save</button>
-      </div>
-      <div class="small" id="usernameInfo"></div>
-    </div>
-  </div>
-
+  <!-- Minimal scripts -->
   <script type="module">
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import {
-      getAuth,
-      onAuthStateChanged,
-      GoogleAuthProvider,
-      signInWithPopup,
-      signOut,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      sendEmailVerification,
-      updateProfile
+      getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
+      signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      sendEmailVerification, updateProfile, reauthenticateWithCredential,
+      EmailAuthProvider, updateEmail, updatePassword, deleteUser
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
     import {
-      getDatabase,
-      ref,
-      push,
-      onChildAdded,
-      query,
-      limitToLast,
-      get,
-      set,
-      serverTimestamp
+      getDatabase, ref, push, onChildAdded, query, limitToLast, get, set, serverTimestamp, remove
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    import {
+      getStorage, ref as sRef, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
-    // Firebase config (provided)
+    // --- Firebase config (user provided) ---
     const firebaseConfig = {
       apiKey: "AIzaSyClpOt6HnUl0qwFr1NytfuSurhBoagCHL8",
       authDomain: "chatting-29d11.firebaseapp.com",
@@ -211,171 +299,179 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
+    const storage = getStorage(app);
 
-    const authOverlay = document.getElementById('authOverlay');
-    const googleSign = document.getElementById('googleSign');
-    const signToggle = document.getElementById('signToggle');
-    const signOutBtn = document.getElementById('signOutBtn');
+    // UI refs
+    const views = {
+      login: document.getElementById('view-login'),
+      chat: document.getElementById('view-chat'),
+      profile: document.getElementById('view-profile')
+    };
+    const topbar = document.getElementById('topbar');
+    const topUser = document.getElementById('topUser');
+    const topRoom = document.getElementById('topRoom');
+    const signOutTop = document.getElementById('signOutTop');
+
+    const tabSignUp = document.getElementById('tabSignUp'), tabSignIn = document.getElementById('tabSignIn');
+    const signupForm = document.getElementById('signupForm'), signinForm = document.getElementById('signinForm');
+
+    // login elements
+    const suEmail = document.getElementById('suEmail'), suPassword = document.getElementById('suPassword'), suDisplayName = document.getElementById('suDisplayName'), suUsername = document.getElementById('suUsername'), createAccountBtn = document.getElementById('createAccountBtn');
+    const siEmail = document.getElementById('siEmail'), siPassword = document.getElementById('siPassword'), signInBtn = document.getElementById('signInBtn');
+    const googleSignUp = document.getElementById('googleSignUp'), googleSignIn = document.getElementById('googleSignIn');
+
+    // chat/profile elements
     const userState = document.getElementById('userState');
-
-    const emailInput = document.getElementById('emailInput');
-    const passInput = document.getElementById('passInput');
-    const emailSignUp = document.getElementById('emailSignUp');
-    const emailSignIn = document.getElementById('emailSignIn');
-
-    const messagesEl = document.getElementById('messages');
-    const sendBtn = document.getElementById('sendBtn');
-    const messageInput = document.getElementById('messageInput');
+    const signToggle = document.getElementById('signToggle'), profileBtn = document.getElementById('profileBtn');
+    const profileBtnTop = document.getElementById('goProfile');
+    const messagesEl = document.getElementById('messages'), sendBtn = document.getElementById('sendBtn'), messageInput = document.getElementById('messageInput');
+    const channelList = document.getElementById('channelList');
+    const memberList = document.getElementById('memberList');
     const roomTitle = document.getElementById('roomTitle');
 
-    const channelList = document.getElementById('channelList');
-    const membersEl = document.getElementById('memberList');
+    // profile controls
+    const avatarPreview = document.getElementById('avatarPreview'), fileInput = document.getElementById('fileInput'), changePicBtn = document.getElementById('changePicBtn');
+    const displayNameEl = document.getElementById('displayName'), usernameEl = document.getElementById('username'), saveProfileBtn = document.getElementById('saveProfileBtn'), signOutBtn = document.getElementById('signOutBtn');
+    const newEmailEl = document.getElementById('newEmail'), reauthPasswordEl = document.getElementById('reauthPassword'), changeEmailBtn = document.getElementById('changeEmailBtn');
+    const newPasswordEl = document.getElementById('newPassword'), changePasswordBtn = document.getElementById('changePasswordBtn'), deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
-    const verifyOverlay = document.getElementById('verifyOverlay');
-    const iVerifiedBtn = document.getElementById('iVerifiedBtn');
-    const resendVerifyBtn = document.getElementById('resendVerifyBtn');
-    const verifyInfo = document.getElementById('verifyInfo');
-
-    const usernameOverlay = document.getElementById('usernameOverlay');
-    const usernameInput = document.getElementById('usernameInput');
-    const setUsernameBtn = document.getElementById('setUsernameBtn');
-    const usernameInfo = document.getElementById('usernameInfo');
-
-    let currentRoom = 'general';
     let currentUser = null;
+    let currentRoom = 'general';
 
-    // Toggle auth modal
-    signToggle.addEventListener('click', () => {
-      authOverlay.style.display = authOverlay.style.display === 'none' ? 'flex' : 'none';
-    });
+    // Helper: show view
+    function showView(name){
+      Object.values(views).forEach(v=>v.classList.remove('active'));
+      views[name].classList.add('active');
+      // topbar visibility: show when in chat or profile
+      if (name === 'chat' || name === 'profile') {
+        topbar.style.display = 'flex';
+      } else {
+        topbar.style.display = 'none';
+      }
+    }
 
-    // Google sign-in
-    googleSign.addEventListener('click', async () => {
+    // init DOB selects
+    (function populateDOB(){
+      const dayEl = document.getElementById('dobDay'), yearEl = document.getElementById('dobYear');
+      for(let d=1; d<=31; d++){ const o=document.createElement('option'); o.textContent=d; o.value=d; dayEl.appendChild(o); }
+      const currentYear = new Date().getFullYear();
+      for(let y=currentYear; y>=1900; y--){ const o=document.createElement('option'); o.textContent=y; o.value=y; yearEl.appendChild(o); }
+    })();
+
+    // Tabs
+    tabSignUp.onclick = () => { tabSignUp.style.background = 'rgba(255,255,255,0.03)'; tabSignIn.style.background='transparent'; signupForm.style.display='block'; signinForm.style.display='none'; }
+    tabSignIn.onclick = () => { tabSignIn.style.background = 'rgba(255,255,255,0.03)'; tabSignUp.style.background='transparent'; signupForm.style.display='none'; signinForm.style.display='block'; }
+
+    // Auth actions
+    googleSignUp.addEventListener('click', async ()=> { await googleSignIn(); });
+    googleSignIn.addEventListener('click', async ()=> { await googleSignIn(); });
+
+    async function googleSignIn(){
       const provider = new GoogleAuthProvider();
       try {
         await signInWithPopup(auth, provider);
-        authOverlay.style.display = 'none';
-      } catch (e) {
-        alert('Sign-in failed: ' + e.message);
-      }
-    });
+        // redirect to chat
+        location.hash = '#chat';
+      } catch(e){ alert('Google sign-in failed: ' + (e.message || e)); }
+    }
 
-    // Create user and send verification email (built-in Firebase)
-    emailSignUp.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      const pass = passInput.value;
-      if (!email || !pass) return alert('Enter email and password');
+    createAccountBtn.addEventListener('click', async () => {
+      const email = suEmail.value.trim(), password = suPassword.value, display = suDisplayName.value.trim(), username = suUsername.value.trim();
+      if (!email || !password || !username) return alert('Please fill required fields (email, username, password).');
       try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
-        const user = userCred.user;
-        try {
-          await sendEmailVerification(user);
-          verifyInfo.textContent = 'Verification email sent. Check your inbox.';
-          verifyOverlay.style.display = 'flex';
-          authOverlay.style.display = 'none';
-        } catch (err) {
-          alert('Failed to send verification email: ' + (err.message || err));
-        }
-      } catch (e) {
-        alert('Sign-up failed: ' + e.message);
-      }
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        // set display name immediately (optional)
+        await updateProfile(cred.user, { displayName: display || username });
+        // Send verification email (built-in)
+        try { await sendEmailVerification(cred.user); alert('Account created. Verification email sent.'); } catch { alert('Account created. Please verify your email from your inbox.'); }
+        // move to sign-in view
+        tabSignIn.click();
+      } catch(e){ alert('Sign-up failed: ' + (e.message || e)); }
     });
 
-    // Resend verification
-    resendVerifyBtn.addEventListener('click', async () => {
-      if (!auth.currentUser) return verifyInfo.textContent = 'No signed-in user.';
+    signInBtn.addEventListener('click', async () => {
+      const email = siEmail.value.trim(), password = siPassword.value;
+      if (!email || !password) return alert('Enter email and password');
       try {
-        await sendEmailVerification(auth.currentUser);
-        verifyInfo.textContent = 'Verification email resent.';
-      } catch (e) {
-        verifyInfo.textContent = 'Resend failed.';
-      }
+        await signInWithEmailAndPassword(auth, email, password);
+        location.hash = '#chat';
+      } catch(e){ alert('Sign-in failed: ' + (e.message || e)); }
     });
 
-    // User clicks "I verified": reload user and check emailVerified
-    iVerifiedBtn.addEventListener('click', async () => {
-      if (!auth.currentUser) return verifyInfo.textContent = 'No signed-in user.';
+    // forgot password flow
+    document.getElementById('forgot').addEventListener('click', async () => {
+      const email = prompt('Enter your email to receive a password reset link:');
+      if (!email) return;
       try {
-        await auth.currentUser.reload();
-        if (auth.currentUser.emailVerified) {
-          verifyOverlay.style.display = 'none';
-          // show username modal
-          usernameInput.value = '';
-          usernameOverlay.style.display = 'flex';
-        } else {
-          verifyInfo.textContent = 'Email not verified yet. Try again after clicking the link.';
-        }
-      } catch (e) {
-        verifyInfo.textContent = 'Error checking verification.';
-      }
+        const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
+        await sendPasswordResetEmail(auth, email);
+        alert('Password reset email sent.');
+      } catch(err){ alert('Failed to send reset: ' + (err.message||err)); }
     });
 
-    // Set username (displayName) and store profile
-    setUsernameBtn.addEventListener('click', async () => {
-      const name = usernameInput.value.trim();
-      if (!name) return usernameInfo.textContent = 'Please enter a username.';
-      if (!auth.currentUser) return usernameInfo.textContent = 'Not signed in.';
-      try {
-        await updateProfile(auth.currentUser, { displayName: name });
-        await set(ref(db, `users/${auth.currentUser.uid}/profile`), {
-          name,
-          createdAt: serverTimestamp()
-        });
-        usernameOverlay.style.display = 'none';
-        usernameInfo.textContent = '';
-      } catch (e) {
-        usernameInfo.textContent = 'Failed to save username.';
-      }
+    // sign-out (top & profile)
+    signToggle.addEventListener('click', ()=> { location.hash = '#login' });
+    signOutBtn.addEventListener('click', async ()=> {
+      await signOut(auth);
+      location.hash = '#login';
+    });
+    signOutTop.addEventListener('click', async ()=> {
+      await signOut(auth);
+      location.hash = '#login';
     });
 
-    // Email sign in
-    emailSignIn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-      const pass = passInput.value;
-      if (!email || !pass) return alert('Enter email and password');
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        authOverlay.style.display = 'none';
-        // if not verified, show verify overlay
-        if (auth.currentUser && !auth.currentUser.emailVerified) {
-          verifyInfo.textContent = 'Verification email was sent. Click the link in the email.';
-          verifyOverlay.style.display = 'flex';
-        }
-      } catch (e) {
-        alert('Sign-in failed: ' + e.message);
-      }
-    });
+    // profile nav
+    profileBtn.addEventListener('click', ()=> { location.hash = '#profile'; });
+    profileBtnTop.addEventListener('click', ()=> { location.hash = '#profile'; });
+    document.getElementById('goHome').addEventListener('click', ()=> { location.hash = '#chat'; });
 
-    // Sign out
-    signOutBtn.addEventListener('click', async () => { await signOut(auth); });
-
-    // Auth state changes
+    // Auth state listener
     onAuthStateChanged(auth, user => {
       currentUser = user;
       if (user) {
         userState.textContent = user.displayName || user.email;
-        signToggle.textContent = 'Profile';
-        signOutBtn.style.display = 'inline-block';
-        // If signed in but not verified, prompt verification
-        if (!user.emailVerified) {
-          verifyInfo.textContent = 'Verification email was sent. Click the link in the email.';
-          verifyOverlay.style.display = 'flex';
-        }
-        // presence (simple)
+        topUser.textContent = user.displayName || user.email;
+        signOutTop.style.display = 'inline-block';
+        // show DB presence (simple)
         set(ref(db, 'presence/' + user.uid), { name: user.displayName || user.email, lastSeen: serverTimestamp() }).catch(()=>{});
+        // populate profile fields
+        displayNameEl.value = user.displayName || '';
+        usernameEl.value = (user.displayName || '').replace(/\s+/g,'');
+        if (user.photoURL) {
+          avatarPreview.style.backgroundImage = `url(${user.photoURL})`; avatarPreview.textContent = '';
+        } else {
+          avatarPreview.style.backgroundImage = ''; avatarPreview.textContent = (user.displayName || user.email || 'U').slice(0,2).toUpperCase();
+        }
       } else {
         userState.textContent = 'Not signed in';
-        signToggle.textContent = 'Sign in';
-        signOutBtn.style.display = 'none';
+        topUser.textContent = '';
+        signOutTop.style.display = 'none';
       }
+      // Basic routing: if hash indicates a private view but user not signed-in, redirect to login
+      applyRouting();
     });
 
-    // Channel switching
+    // Routing via hash (#login, #chat, #profile)
+    function applyRouting(){
+      const hash = location.hash.replace('#','') || 'chat';
+      if ((hash === 'chat' || hash === 'profile') && !currentUser) {
+        showView('login');
+        location.hash = '#login';
+        return;
+      }
+      if (hash === 'login') showView('login');
+      else if (hash === 'chat') showView('chat');
+      else if (hash === 'profile') showView('profile');
+    }
+    window.addEventListener('hashchange', applyRouting);
+    // initial
+    if (!location.hash) location.hash = '#login';
+    applyRouting();
+
+    // Channels and messages
     channelList.addEventListener('click', (ev) => {
-      const el = ev.target.closest('.channel');
-      if (!el) return;
-      const room = el.dataset.room;
-      setActiveChannel(room, el);
+      const el = ev.target.closest('.channel'); if(!el) return;
+      setActiveChannel(el.dataset.room, el);
     });
 
     function setActiveChannel(room, el){
@@ -385,85 +481,151 @@
       roomTitle.textContent = '# ' + room;
       messageInput.placeholder = 'Message #' + room;
       loadMessages(room);
+      topRoom.textContent = `# ${room}`;
     }
 
-    // Messaging
     sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+    messageInput.addEventListener('keydown', (e)=> { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
     async function sendMessage(){
-      const text = messageInput.value.trim();
-      if (!text) return;
-      if (!currentUser) { authOverlay.style.display = 'flex'; return; }
-      const msgRef = ref(db, `rooms/${currentRoom}/messages`);
+      const text = messageInput.value.trim(); if(!text) return;
+      if(!currentUser){ location.hash = '#login'; return; }
       try {
-        await push(msgRef, {
+        await push(ref(db, `rooms/${currentRoom}/messages`), {
           uid: currentUser.uid,
-          name: currentUser.displayName || currentUser.email || 'Anonymous',
-          photoURL: currentUser.photoURL || '',
+          name: currentUser.displayName || currentUser.email,
           text,
           ts: Date.now()
         });
         messageInput.value = '';
-      } catch (e) {
-        console.error(e);
-        alert('Failed to send message: ' + e.message);
-      }
+      } catch(e){ alert('Send failed: ' + (e.message||e)); }
     }
 
     function loadMessages(room){
       messagesEl.innerHTML = '';
       const q = query(ref(db, `rooms/${room}/messages`), limitToLast(200));
-      onChildAdded(q, (snap) => {
+      onChildAdded(q, snap => {
         const msg = snap.val();
         appendMessage(msg);
       });
     }
-
     function appendMessage(msg){
-      const el = document.createElement('div');
-      el.className = 'message';
-      const av = document.createElement('div'); av.className = 'avatar'; av.textContent = (msg.name || 'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
-      const body = document.createElement('div');
-      const meta = document.createElement('div'); meta.className = 'meta';
-      const author = document.createElement('div'); author.className = 'author'; author.textContent = msg.name || 'Unknown';
-      const ts = document.createElement('div'); ts.className = 'ts'; ts.textContent = formatTime(msg.ts);
-      meta.appendChild(author); meta.appendChild(ts);
-      const text = document.createElement('div'); text.className = 'text'; text.textContent = msg.text;
-      body.appendChild(meta); body.appendChild(text);
-      el.appendChild(av); el.appendChild(body);
-      messagesEl.appendChild(el);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      const el = document.createElement('div'); el.style.marginBottom='12px';
+      const author = document.createElement('div'); author.style.fontWeight='600'; author.textContent=msg.name||'Unknown';
+      const text = document.createElement('div'); text.textContent = msg.text; text.style.color='var(--white)';
+      const ts = document.createElement('div'); ts.style.fontSize='12px'; ts.style.color='var(--muted)'; ts.textContent = new Date(msg.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      el.appendChild(author); el.appendChild(text); el.appendChild(ts);
+      messagesEl.appendChild(el); messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    function formatTime(ts){
-      if (!ts) return '';
-      const d = new Date(ts);
-      return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    }
-
-    setActiveChannel('general', document.querySelector('.channel[data-room="general"]'));
-
-    // Simple presence list loader
+    // Presence list
     async function loadPresence(){
       try {
         const p = await get(ref(db, 'presence'));
-        membersEl.innerHTML = '';
+        memberList.innerHTML = '';
         if (!p.exists()) return;
         const items = Object.values(p.val());
         items.forEach(it=>{
-          const m = document.createElement('div');
-          m.className='member';
-          const a = document.createElement('div'); a.className='avatar'; a.textContent = (it.name||'U').slice(0,2).toUpperCase();
-          const n = document.createElement('div'); n.textContent = it.name || 'Anonymous';
-          m.appendChild(a); m.appendChild(n);
-          membersEl.appendChild(m);
+          const m = document.createElement('div'); m.style.display='flex'; m.style.alignItems='center'; m.style.gap='8px'; m.style.padding='6px 0';
+          const a = document.createElement('div'); a.style.width='32px'; a.style.height='32px'; a.style.borderRadius='6px'; a.style.background='rgba(255,255,255,0.03)'; a.style.display='flex'; a.style.alignItems='center'; a.style.justifyContent='center'; a.textContent=(it.name||'U').slice(0,2).toUpperCase();
+          const n = document.createElement('div'); n.textContent = it.name || 'Anonymous'; n.style.color='var(--muted)'; m.appendChild(a); m.appendChild(n); memberList.appendChild(m);
         });
-      } catch(e){ console.warn('presence load failed', e); }
+      } catch(e){ console.warn(e); }
     }
-    setInterval(loadPresence, 5000);
-    loadPresence();
+    setInterval(loadPresence, 5000); loadPresence();
 
+    // PROFILE: image upload
+    changePicBtn.addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', async (e) => {
+      const f = e.target.files[0]; if(!f) return;
+      if (f.size > 5 * 1024 * 1024) return alert('File too large (max 5MB).');
+      // preview
+      const url = URL.createObjectURL(f);
+      avatarPreview.style.backgroundImage = `url(${url}`; avatarPreview.textContent = '';
+      try {
+        const storageRef = sRef(storage, `avatars/${currentUser.uid}/${Date.now()}_${f.name}`);
+        await uploadBytes(storageRef, f);
+        const downloadUrl = await getDownloadURL(storageRef);
+        await updateProfile(currentUser, { photoURL: downloadUrl });
+        await set(ref(db, `users/${currentUser.uid}/profile`), { name: currentUser.displayName || '', photoURL: downloadUrl, updatedAt: serverTimestamp() });
+        alert('Profile picture updated.');
+      } catch(err){ console.error(err); alert('Upload failed: ' + (err.message||err)); }
+    });
+
+    // Save display name / username
+    saveProfileBtn.addEventListener('click', async () => {
+      const name = displayNameEl.value.trim();
+      const username = usernameEl.value.trim();
+      if (!username) return alert('Username cannot be empty.');
+      try {
+        await updateProfile(currentUser, { displayName: name || username });
+        await set(ref(db, `users/${currentUser.uid}/profile`), { name: name || username, username, updatedAt: serverTimestamp() });
+        alert('Profile saved.');
+      } catch (err){ console.error(err); alert('Failed to save profile: ' + (err.message || err)); }
+    });
+
+    // Reauth helper
+    async function reauth(currentEmail, password){
+      const cred = EmailAuthProvider.credential(currentEmail, password);
+      return reauthenticateWithCredential(currentUser, cred);
+    }
+
+    // Change email
+    changeEmailBtn.addEventListener('click', async () => {
+      const newEmail = newEmailEl.value.trim(), pwd = reauthPasswordEl.value;
+      if (!newEmail || !pwd) return alert('Enter new email and current password to re-authenticate.');
+      try {
+        await reauth(currentUser.email, pwd);
+        await updateEmail(currentUser, newEmail);
+        alert('Email changed. You will be signed out.');
+        await signOut(auth);
+        location.hash = '#login';
+      } catch(err){ console.error(err); alert('Change email failed: ' + (err.message || err)); }
+    });
+
+    // Change password
+    changePasswordBtn.addEventListener('click', async () => {
+      const newPass = newPasswordEl.value, pwd = reauthPasswordEl.value;
+      if (!newPass || !pwd) return alert('Enter your current password and the new password.');
+      try {
+        await reauth(currentUser.email, pwd);
+        await updatePassword(currentUser, newPass);
+        alert('Password changed. You will be signed out.');
+        await signOut(auth);
+        location.hash = '#login';
+      } catch(err){ console.error(err); alert('Change password failed: ' + (err.message || err)); }
+    });
+
+    // Delete account
+    deleteAccountBtn.addEventListener('click', async () => {
+      const ok = confirm('Are you sure? This will permanently delete your account and content.');
+      if (!ok) return;
+      const pwd = prompt('Enter your password to confirm deletion:');
+      if (!pwd) return alert('Password required.');
+      try {
+        await reauth(currentUser.email, pwd);
+        // remove basic user data
+        await set(ref(db, `users/${currentUser.uid}`), null);
+        await set(ref(db, `presence/${currentUser.uid}`), null);
+        await deleteUser(currentUser);
+        alert('Account deleted.');
+        location.hash = '#login';
+      } catch(err){ console.error(err); alert('Delete failed: ' + (err.message || err)); }
+    });
+
+    // Helper: initialize default room
+    setActiveChannel('general', document.querySelector('.channel[data-room="general"]'));
+
+    // small convenience: back-to-chat button in login view
+    document.getElementById('backToChat').addEventListener('click', ()=> location.hash = '#chat');
+
+    // small UX: basic keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && location.hash === '#profile') { location.hash = '#chat'; }
+    });
+
+    // Final: ensure we update the visible view on load
+    applyRouting();
   </script>
 </body>
 </html>
