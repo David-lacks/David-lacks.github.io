@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chudcord</title>
+  <title>my-chat — All-in-One (Login · Chat · Profile)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -63,6 +63,13 @@
     .brand{font-weight:700;margin-right:12px}
     .nav{margin-left:auto;display:flex;gap:8px;align-items:center}
 
+    /* repo modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:60}
+    .modal{background:var(--panel);padding:18px;border-radius:10px;max-width:420px;width:90%;border:1px solid rgba(255,255,255,0.04)}
+    .modal h3{margin:0 0 8px 0}
+    .lang-bar{height:10px;border-radius:6px;background:rgba(255,255,255,0.04);overflow:hidden;margin-top:8px}
+    .lang-seg{height:100%;float:left}
+
     /* responsive (mobile similar to Discord) */
     @media (max-width:900px){
       .channels{display:none}
@@ -88,14 +95,14 @@
       <div id="topUser" style="color:var(--muted)"></div>
       <button id="goProfile" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Profile</button>
       <button id="goHome" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Home</button>
+      <button id="repoBtn" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Repo</button>
       <button id="signOutTop" class="btn" style="background:var(--danger);display:none">Sign out</button>
     </div>
   </div>
 
-  <!-- MAIN: we'll show either the combined app UI (chat) or the login/profile "pages" -->
+  <!-- MAIN -->
   <main id="appRoot">
-
-    <!-- LOGIN / SIGNUP view (single page form) -->
+    <!-- LOGIN / SIGNUP view -->
     <section id="view-login" class="view active">
       <div class="card" role="main">
         <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -164,7 +171,7 @@
       </div>
     </section>
 
-    <!-- CHAT view (main app UI) -->
+    <!-- CHAT view -->
     <section id="view-chat" class="view">
       <div class="app">
         <div class="servers" aria-hidden="true">
@@ -265,11 +272,31 @@
         </section>
       </div>
     </section>
-
   </main>
 
-  <!-- Minimal scripts -->
+  <!-- Repo modal -->
+  <div id="repoModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="repoTitle">
+      <h3 id="repoTitle">Repository Info</h3>
+      <div id="repoContent">
+        <!-- inserted by script -->
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px">
+        <button id="closeRepo" class="btn" style="background:rgba(255,255,255,0.06)">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
+    // Repo info provided by user (embedded here)
+    const repoInfo = {
+      repository: "David-lacks/David-lacks.github.io",
+      repoId: 1082428546,
+      languages: [
+        { name: "HTML", percent: 100 }
+      ]
+    };
+
     // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import {
@@ -335,6 +362,12 @@
     const newEmailEl = document.getElementById('newEmail'), reauthPasswordEl = document.getElementById('reauthPassword'), changeEmailBtn = document.getElementById('changeEmailBtn');
     const newPasswordEl = document.getElementById('newPassword'), changePasswordBtn = document.getElementById('changePasswordBtn'), deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
+    // repo modal elements
+    const repoBtn = document.getElementById('repoBtn');
+    const repoModal = document.getElementById('repoModal');
+    const repoContent = document.getElementById('repoContent');
+    const closeRepo = document.getElementById('closeRepo');
+
     let currentUser = null;
     let currentRoom = 'general';
 
@@ -350,7 +383,7 @@
       }
     }
 
-    // init DOB selects
+    // init DOB selects (ensure elements exist)
     (function populateDOB(){
       const dayEl = document.getElementById('dobDay'), yearEl = document.getElementById('dobYear');
       if (!dayEl || !yearEl) return;
@@ -424,6 +457,59 @@
     profileBtn.addEventListener('click', ()=> { location.hash = '#profile'; });
     profileBtnTop.addEventListener('click', ()=> { location.hash = '#profile'; });
     document.getElementById('goHome').addEventListener('click', ()=> { location.hash = '#chat'; });
+
+    // Repo modal behavior
+    repoBtn.addEventListener('click', () => {
+      renderRepoInfo();
+      repoModal.style.display = 'flex';
+      repoModal.setAttribute('aria-hidden','false');
+    });
+    closeRepo.addEventListener('click', () => {
+      repoModal.style.display = 'none';
+      repoModal.setAttribute('aria-hidden','true');
+    });
+    repoModal.addEventListener('click', (e) => { if (e.target === repoModal) { repoModal.style.display='none'; repoModal.setAttribute('aria-hidden','true'); } });
+
+    function renderRepoInfo(){
+      // Build HTML for repo info
+      const r = repoInfo;
+      const el = document.createElement('div');
+      el.innerHTML = `
+        <div style="font-size:14px;color:var(--muted)">Repository</div>
+        <div style="font-weight:700;margin-top:6px">${escapeHtml(r.repository)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">Repo ID: ${r.repoId}</div>
+        <div style="margin-top:12px;font-size:13px;color:var(--muted)">Languages</div>
+      `;
+      const langList = document.createElement('div');
+      langList.style.marginTop = '8px';
+      r.languages.forEach(lang=>{
+        const name = escapeHtml(lang.name);
+        const pct = Number(lang.percent) || 0;
+        const row = document.createElement('div');
+        row.style.marginBottom = '8px';
+        row.innerHTML = `
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><div>${name}</div><div style="color:var(--muted)">${pct}%</div></div>
+          <div class="lang-bar"><div class="lang-seg" style="width:${pct}%;background:${progressColor(name)}"></div></div>
+        `;
+        langList.appendChild(row);
+      });
+      el.appendChild(langList);
+      // permalink
+      const link = document.createElement('div');
+      link.style.marginTop = '12px';
+      link.innerHTML = `<a href="https://github.com/${encodeURIComponent(r.repository)}" target="_blank" rel="noopener" style="color:#9fc0ff;text-decoration:underline">Open on GitHub</a>`;
+      el.appendChild(link);
+      repoContent.innerHTML = '';
+      repoContent.appendChild(el);
+    }
+
+    function progressColor(name){
+      // simple palette
+      const map = { HTML: '#e44d26', JavaScript: '#f1e05a', CSS: '#563d7c', TypeScript: '#2b7489' };
+      return map[name] || '#69a0ff';
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
     // Auth state listener
     onAuthStateChanged(auth, user => {
