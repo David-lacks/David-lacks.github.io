@@ -276,7 +276,7 @@
       getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
       signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword,
       sendEmailVerification, updateProfile, reauthenticateWithCredential,
-      EmailAuthProvider, updateEmail, updatePassword, deleteUser
+      EmailAuthProvider, updateEmail, updatePassword, deleteUser, sendPasswordResetEmail
     } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
     import {
       getDatabase, ref, push, onChildAdded, query, limitToLast, get, set, serverTimestamp, remove
@@ -353,6 +353,7 @@
     // init DOB selects
     (function populateDOB(){
       const dayEl = document.getElementById('dobDay'), yearEl = document.getElementById('dobYear');
+      if (!dayEl || !yearEl) return;
       for(let d=1; d<=31; d++){ const o=document.createElement('option'); o.textContent=d; o.value=d; dayEl.appendChild(o); }
       const currentYear = new Date().getFullYear();
       for(let y=currentYear; y>=1900; y--){ const o=document.createElement('option'); o.textContent=y; o.value=y; yearEl.appendChild(o); }
@@ -370,7 +371,7 @@
       const provider = new GoogleAuthProvider();
       try {
         await signInWithPopup(auth, provider);
-        // redirect to chat
+        // navigate to chat
         location.hash = '#chat';
       } catch(e){ alert('Google sign-in failed: ' + (e.message || e)); }
     }
@@ -381,7 +382,7 @@
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         // set display name immediately (optional)
-        await updateProfile(cred.user, { displayName: display || username });
+        try { await updateProfile(cred.user, { displayName: display || username }); } catch {}
         // Send verification email (built-in)
         try { await sendEmailVerification(cred.user); alert('Account created. Verification email sent.'); } catch { alert('Account created. Please verify your email from your inbox.'); }
         // move to sign-in view
@@ -403,7 +404,6 @@
       const email = prompt('Enter your email to receive a password reset link:');
       if (!email) return;
       try {
-        const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js");
         await sendPasswordResetEmail(auth, email);
         alert('Password reset email sent.');
       } catch(err){ alert('Failed to send reset: ' + (err.message||err)); }
@@ -432,7 +432,7 @@
         userState.textContent = user.displayName || user.email;
         topUser.textContent = user.displayName || user.email;
         signOutTop.style.display = 'inline-block';
-        // show DB presence (simple)
+        // show presence (simple)
         set(ref(db, 'presence/' + user.uid), { name: user.displayName || user.email, lastSeen: serverTimestamp() }).catch(()=>{});
         // populate profile fields
         displayNameEl.value = user.displayName || '';
@@ -541,7 +541,8 @@
       if (f.size > 5 * 1024 * 1024) return alert('File too large (max 5MB).');
       // preview
       const url = URL.createObjectURL(f);
-      avatarPreview.style.backgroundImage = `url(${url}`; avatarPreview.textContent = '';
+      avatarPreview.style.backgroundImage = `url(${url})`;
+      avatarPreview.textContent = '';
       try {
         const storageRef = sRef(storage, `avatars/${currentUser.uid}/${Date.now()}_${f.name}`);
         await uploadBytes(storageRef, f);
