@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0f1720;
+      --sidebar:#0b1220;
+      --muted:#8a98a8;
+      --accent:#5865f2;
+      --panel:#111622;
+      --panel-2:#0f1622;
+      --white:#e6eef6;
+      --danger:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:linear-gradient(180deg,#07101a 0%, #071425 100%);
+      color:var(--white);
+      height:100vh;
+      display:flex;
+      align-items:stretch;
+    }
+    .servers{ width:72px; background:linear-gradient(180deg,var(--sidebar), #05070a); padding:8px; display:flex; flex-direction:column; gap:10px; align-items:center; border-right:1px solid rgba(255,255,255,0.03); }
+    .server{ width:48px; height:48px; border-radius:12px; background:linear-gradient(180deg,#26303b,#1b2228); display:flex; align-items:center; justify-content:center; color:var(--white); font-weight:700; font-size:18px; cursor:pointer; border:2px solid transparent; }
+    .server.active{ border-color:rgba(88,101,242,0.8); box-shadow:0 4px 12px rgba(88,101,242,0.08); }
+
+    .channels{ width:260px; background:var(--panel); padding:16px; border-right:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:10px; }
+    .channels header{ display:flex; justify-content:space-between; align-items:center; gap:6px; }
+    .channels h3{ margin:0; font-size:13px; color:var(--white); }
+    .channels .sub{ font-size:12px; color:var(--muted); margin-top:6px; }
+    .channel-list{ margin-top:8px; display:flex; flex-direction:column; gap:6px; overflow:auto; padding-bottom:12px; }
+    .channel{ padding:6px 8px; border-radius:6px; color:var(--muted); display:flex; gap:8px; align-items:center; cursor:pointer; }
+    .channel:hover{ background:rgba(255,255,255,0.02); color:var(--white) }
+    .channel.active{ background:rgba(88,101,242,0.12); color:var(--white); }
+
+    .chat{ flex:1; display:flex; flex-direction:column; background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent); }
+    .chat-header{ height:64px; display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.03); gap:12px; }
+    .channel-title{ font-weight:600; font-size:16px; }
+    .topic{ color:var(--muted); font-size:13px; }
+
+    .messages{ flex:1; padding:24px 28px; overflow:auto; background: radial-gradient(circle at 10% 10%, rgba(255,255,255,0.012), transparent 8%), linear-gradient(180deg, rgba(255,255,255,0.004), transparent); }
+    .message{ display:flex; gap:12px; margin-bottom:14px; align-items:flex-start; }
+    .avatar{ width:40px; height:40px; border-radius:8px; background:linear-gradient(180deg,#334155,#1f2937); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--white); font-size:14px; flex-shrink:0; }
+    .message .meta{ display:flex; gap:8px; align-items:center; margin-bottom:4px; }
+    .author{ font-weight:600; color:var(--white); font-size:13px; }
+    .ts{ font-size:12px; color:var(--muted); }
+    .text{ color:var(--white); font-size:14px; line-height:1.4; }
+
+    .composer{ padding:12px 16px; border-top:1px solid rgba(255,255,255,0.03); display:flex; gap:12px; align-items:center; }
+    .input{ background:var(--panel-2); border-radius:8px; padding:10px 12px; flex:1; color:var(--white); border:1px solid rgba(255,255,255,0.02); }
+    .btn{ background:var(--accent); border:none; color:white; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+
+    .members{ width:220px; padding:12px; background:var(--panel); border-left:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:10px; }
+    .member{ display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; }
+    .member .avatar{ width:32px; height:32px; border-radius:6px; font-size:13px; }
+
+    .overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.6)); z-index:50; padding:20px; }
+    .card{ width:420px; background:linear-gradient(180deg,#0b1220,#07101a); border-radius:12px; padding:20px; box-shadow:0 10px 30px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03); }
+    .card h2{ margin:0 0 8px 0; font-size:20px }
+    .card p{ margin:0 0 16px 0; color:var(--muted) }
+    .auth-actions{ display:flex; gap:8px; margin-bottom:12px; }
+    .field{ width:100%; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--white) }
+    .small{ font-size:12px; color:var(--muted); margin-top:8px; text-align:center }
+
+    @media (max-width:900px){ .channels{ display:none } .members{ display:none } .servers{ width:60px } }
+  </style>
+</head>
+<body>
+  <div class="servers" id="servers">
+    <div class="server active">C</div>
+    <div class="server">G</div>
+    <div class="server">D</div>
+    <div class="server">+</div>
+  </div>
+
+  <div class="channels" id="channels">
+    <header>
+      <div>
+        <h3>My Community</h3>
+        <div class="sub" id="userState">Not signed in</div>
+      </div>
+      <button class="btn" id="signToggle">Sign in</button>
+    </header>
+
+    <div style="margin-top:8px; font-size:12px; color:var(--muted)">Text Channels</div>
+    <div class="channel-list" id="channelList">
+      <div class="channel active" data-room="general"># general</div>
+      <div class="channel" data-room="random"># random</div>
+      <div class="channel" data-room="help"># help</div>
+    </div>
+  </div>
+
+  <main class="chat">
+    <div class="chat-header">
+      <div>
+        <div class="channel-title" id="roomTitle"># general</div>
+        <div class="topic" id="roomTopic">Welcome</div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="composer">
+      <input id="messageInput" class="input" placeholder="Message #general" />
+      <button class="btn" id="sendBtn">Send</button>
+    </div>
+  </main>
+
+  <aside class="members" id="members">
+    <div style="font-weight:600">Members</div>
+    <div id="memberList">
+      <div class="member"><div class="avatar">A</div><div>Anonymous</div></div>
+    </div>
+  </aside>
+
+  <!-- Auth overlay -->
+  <div class="overlay" id="authOverlay" style="display:none">
+    <div class="card">
+      <h2>Sign in</h2>
+      <p>Sign in with Google or email/password.</p>
+
+      <div class="auth-actions">
+        <button class="btn" id="googleSign">Sign in with Google</button>
+        <button class="btn" id="signOutBtn" style="display:none;background:var(--danger)">Sign out</button>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:8px">
+        <input id="emailInput" class="field" placeholder="Email" />
+        <input id="passInput" class="field" placeholder="Password" type="password" />
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:8px">
+        <button class="btn" id="emailSignUp">Create</button>
+        <button class="btn" id="emailSignIn">Sign in</button>
+      </div>
+
+      <div class="small">The app uses Firebase Authentication email verification.</div>
+    </div>
+  </div>
+
+  <!-- Verify overlay -->
+  <div class="overlay" id="verifyOverlay" style="display:none">
+    <div class="card">
+      <h2>Verify your email</h2>
+      <p>We sent a verification email. Click the link in the email, then click "I verified".</p>
+      <div style="display:flex; gap:8px; margin-top:12px">
+        <button class="btn" id="iVerifiedBtn">I verified</button>
+        <button class="btn" id="resendVerifyBtn" style="background:rgba(255,255,255,0.06)">Resend</button>
+      </div>
+      <div class="small" id="verifyInfo"></div>
+    </div>
+  </div>
+
+  <!-- Username modal -->
+  <div class="overlay" id="usernameOverlay" style="display:none">
+    <div class="card">
+      <h2>Choose your username</h2>
+      <p>Pick a display name that others will see.</p>
+      <input id="usernameInput" class="field" placeholder="Username" />
+      <div style="display:flex; gap:8px; margin-top:12px">
+        <button class="btn" id="setUsernameBtn">Save</button>
+      </div>
+      <div class="small" id="usernameInfo"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendEmailVerification,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      push,
+      onChildAdded,
+      query,
+      limitToLast,
+      get,
+      set,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    // Firebase config (provided)
+    const firebaseConfig = {
+      apiKey: "AIzaSyClpOt6HnUl0qwFr1NytfuSurhBoagCHL8",
+      authDomain: "chatting-29d11.firebaseapp.com",
+      databaseURL: "https://chatting-29d11-default-rtdb.firebaseio.com",
+      projectId: "chatting-29d11",
+      storageBucket: "chatting-29d11.firebasestorage.app",
+      messagingSenderId: "1018454045492",
+      appId: "1:1018454045492:web:2509f900062e9c15f36b61"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const authOverlay = document.getElementById('authOverlay');
+    const googleSign = document.getElementById('googleSign');
+    const signToggle = document.getElementById('signToggle');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const userState = document.getElementById('userState');
+
+    const emailInput = document.getElementById('emailInput');
+    const passInput = document.getElementById('passInput');
+    const emailSignUp = document.getElementById('emailSignUp');
+    const emailSignIn = document.getElementById('emailSignIn');
+
+    const messagesEl = document.getElementById('messages');
+    const sendBtn = document.getElementById('sendBtn');
+    const messageInput = document.getElementById('messageInput');
+    const roomTitle = document.getElementById('roomTitle');
+
+    const channelList = document.getElementById('channelList');
+    const membersEl = document.getElementById('memberList');
+
+    const verifyOverlay = document.getElementById('verifyOverlay');
+    const iVerifiedBtn = document.getElementById('iVerifiedBtn');
+    const resendVerifyBtn = document.getElementById('resendVerifyBtn');
+    const verifyInfo = document.getElementById('verifyInfo');
+
+    const usernameOverlay = document.getElementById('usernameOverlay');
+    const usernameInput = document.getElementById('usernameInput');
+    const setUsernameBtn = document.getElementById('setUsernameBtn');
+    const usernameInfo = document.getElementById('usernameInfo');
+
+    let currentRoom = 'general';
+    let currentUser = null;
+
+    // Toggle auth modal
+    signToggle.addEventListener('click', () => {
+      authOverlay.style.display = authOverlay.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    // Google sign-in
+    googleSign.addEventListener('click', async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+        authOverlay.style.display = 'none';
+      } catch (e) {
+        alert('Sign-in failed: ' + e.message);
+      }
+    });
+
+    // Create user and send verification email (built-in Firebase)
+    emailSignUp.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const pass = passInput.value;
+      if (!email || !pass) return alert('Enter email and password');
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        const user = userCred.user;
+        try {
+          await sendEmailVerification(user);
+          verifyInfo.textContent = 'Verification email sent. Check your inbox.';
+          verifyOverlay.style.display = 'flex';
+          authOverlay.style.display = 'none';
+        } catch (err) {
+          alert('Failed to send verification email: ' + (err.message || err));
+        }
+      } catch (e) {
+        alert('Sign-up failed: ' + e.message);
+      }
+    });
+
+    // Resend verification
+    resendVerifyBtn.addEventListener('click', async () => {
+      if (!auth.currentUser) return verifyInfo.textContent = 'No signed-in user.';
+      try {
+        await sendEmailVerification(auth.currentUser);
+        verifyInfo.textContent = 'Verification email resent.';
+      } catch (e) {
+        verifyInfo.textContent = 'Resend failed.';
+      }
+    });
+
+    // User clicks "I verified": reload user and check emailVerified
+    iVerifiedBtn.addEventListener('click', async () => {
+      if (!auth.currentUser) return verifyInfo.textContent = 'No signed-in user.';
+      try {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+          verifyOverlay.style.display = 'none';
+          // show username modal
+          usernameInput.value = '';
+          usernameOverlay.style.display = 'flex';
+        } else {
+          verifyInfo.textContent = 'Email not verified yet. Try again after clicking the link.';
+        }
+      } catch (e) {
+        verifyInfo.textContent = 'Error checking verification.';
+      }
+    });
+
+    // Set username (displayName) and store profile
+    setUsernameBtn.addEventListener('click', async () => {
+      const name = usernameInput.value.trim();
+      if (!name) return usernameInfo.textContent = 'Please enter a username.';
+      if (!auth.currentUser) return usernameInfo.textContent = 'Not signed in.';
+      try {
+        await updateProfile(auth.currentUser, { displayName: name });
+        await set(ref(db, `users/${auth.currentUser.uid}/profile`), {
+          name,
+          createdAt: serverTimestamp()
+        });
+        usernameOverlay.style.display = 'none';
+        usernameInfo.textContent = '';
+      } catch (e) {
+        usernameInfo.textContent = 'Failed to save username.';
+      }
+    });
+
+    // Email sign in
+    emailSignIn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      const pass = passInput.value;
+      if (!email || !pass) return alert('Enter email and password');
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        authOverlay.style.display = 'none';
+        // if not verified, show verify overlay
+        if (auth.currentUser && !auth.currentUser.emailVerified) {
+          verifyInfo.textContent = 'Verification email was sent. Click the link in the email.';
+          verifyOverlay.style.display = 'flex';
+        }
+      } catch (e) {
+        alert('Sign-in failed: ' + e.message);
+      }
+    });
+
+    // Sign out
+    signOutBtn.addEventListener('click', async () => { await signOut(auth); });
+
+    // Auth state changes
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (user) {
+        userState.textContent = user.displayName || user.email;
+        signToggle.textContent = 'Profile';
+        signOutBtn.style.display = 'inline-block';
+        // If signed in but not verified, prompt verification
+        if (!user.emailVerified) {
+          verifyInfo.textContent = 'Verification email was sent. Click the link in the email.';
+          verifyOverlay.style.display = 'flex';
+        }
+        // presence (simple)
+        set(ref(db, 'presence/' + user.uid), { name: user.displayName || user.email, lastSeen: serverTimestamp() }).catch(()=>{});
+      } else {
+        userState.textContent = 'Not signed in';
+        signToggle.textContent = 'Sign in';
+        signOutBtn.style.display = 'none';
+      }
+    });
+
+    // Channel switching
+    channelList.addEventListener('click', (ev) => {
+      const el = ev.target.closest('.channel');
+      if (!el) return;
+      const room = el.dataset.room;
+      setActiveChannel(room, el);
+    });
+
+    function setActiveChannel(room, el){
+      currentRoom = room;
+      document.querySelectorAll('.channel').forEach(c=>c.classList.remove('active'));
+      el && el.classList.add('active');
+      roomTitle.textContent = '# ' + room;
+      messageInput.placeholder = 'Message #' + room;
+      loadMessages(room);
+    }
+
+    // Messaging
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+    async function sendMessage(){
+      const text = messageInput.value.trim();
+      if (!text) return;
+      if (!currentUser) { authOverlay.style.display = 'flex'; return; }
+      const msgRef = ref(db, `rooms/${currentRoom}/messages`);
+      try {
+        await push(msgRef, {
+          uid: currentUser.uid,
+          name: currentUser.displayName || currentUser.email || 'Anonymous',
+          photoURL: currentUser.photoURL || '',
+          text,
+          ts: Date.now()
+        });
+        messageInput.value = '';
+      } catch (e) {
+        console.error(e);
+        alert('Failed to send message: ' + e.message);
+      }
+    }
+
+    function loadMessages(room){
+      messagesEl.innerHTML = '';
+      const q = query(ref(db, `rooms/${room}/messages`), limitToLast(200));
+      onChildAdded(q, (snap) => {
+        const msg = snap.val();
+        appendMessage(msg);
+      });
+    }
+
+    function appendMessage(msg){
+      const el = document.createElement('div');
+      el.className = 'message';
+      const av = document.createElement('div'); av.className = 'avatar'; av.textContent = (msg.name || 'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+      const body = document.createElement('div');
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const author = document.createElement('div'); author.className = 'author'; author.textContent = msg.name || 'Unknown';
+      const ts = document.createElement('div'); ts.className = 'ts'; ts.textContent = formatTime(msg.ts);
+      meta.appendChild(author); meta.appendChild(ts);
+      const text = document.createElement('div'); text.className = 'text'; text.textContent = msg.text;
+      body.appendChild(meta); body.appendChild(text);
+      el.appendChild(av); el.appendChild(body);
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function formatTime(ts){
+      if (!ts) return '';
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    setActiveChannel('general', document.querySelector('.channel[data-room="general"]'));
+
+    // Simple presence list loader
+    async function loadPresence(){
+      try {
+        const p = await get(ref(db, 'presence'));
+        membersEl.innerHTML = '';
+        if (!p.exists()) return;
+        const items = Object.values(p.val());
+        items.forEach(it=>{
+          const m = document.createElement('div');
+          m.className='member';
+          const a = document.createElement('div'); a.className='avatar'; a.textContent = (it.name||'U').slice(0,2).toUpperCase();
+          const n = document.createElement('div'); n.textContent = it.name || 'Anonymous';
+          m.appendChild(a); m.appendChild(n);
+          membersEl.appendChild(m);
+        });
+      } catch(e){ console.warn('presence load failed', e); }
+    }
+    setInterval(loadPresence, 5000);
+    loadPresence();
+
+  </script>
+</body>
+</html>
