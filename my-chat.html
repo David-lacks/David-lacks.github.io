@@ -3,18 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chudcord chat</title>
+  <title>Chudcord — All-in-One (Login · Chat · Profile)</title>
 
-  <!-- Inline SVG favicon so you immediately see an icon in the tab -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%235865f2'/%3E%3Ctext x='50' y='60' font-size='56' text-anchor='middle' fill='white' font-family='Arial, Helvetica, sans-serif'%3Ec%3C/text%3E%3C/svg%3E">
-
-  <!-- App manifest (optional file can be added next to this page) -->
-  <link rel="manifest" href="manifest.json">
-
+  <!-- App icon: save the image you uploaded as icons/chudcord.png in the repo root -->
+  <link rel="icon" href="/icons/chudcord.png">
+  <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#5865f2">
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <style>
     :root{
       --bg:#07101a; --sidebar:#0b1220; --panel:#111622; --muted:#9aa3ad; --accent:#5865f2; --white:#e6eef6;
@@ -48,6 +44,7 @@
 
     /* members */
     .members{width:220px;padding:12px;background:var(--panel);border-left:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:10px}
+    .avatar{width:96px;height:96px;border-radius:16px;background:linear-gradient(180deg,#334155,#1f2937);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:36px;margin-bottom:10px}
 
     /* views (login/profile/chat) */
     .view{display:none;padding:20px}
@@ -61,13 +58,7 @@
     .small-select{flex:1;background:var(--input);border-radius:10px;padding:12px;color:var(--white);border:1px solid rgba(255,255,255,0.03)}
     .muted{font-size:12px;color:var(--muted);margin-top:8px}
 
-    /* profile layout */
-    .wrap{max-width:1100px;margin:28px auto;display:flex;gap:20px}
-    .left{width:320px;background:var(--panel);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)}
-    .right{flex:1;background:var(--panel);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)}
-    .avatar{width:96px;height:96px;border-radius:16px;background:linear-gradient(180deg,#334155,#1f2937);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:36px;margin-bottom:10px}
-
-    /* top nav for single-file app */
+    /* topbar */
     .topbar{height:56px;background:linear-gradient(180deg,#07131a,#051018);display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid rgba(255,255,255,0.03)}
     .brand{font-weight:700;margin-right:12px}
     .nav{margin-left:auto;display:flex;gap:8px;align-items:center}
@@ -78,7 +69,6 @@
       .members{display:none}
       .servers{width:60px;position:fixed;left:0;top:0;bottom:0}
       .chat{margin-left:60px}
-      .wrap{flex-direction:column;padding:12px}
       .card{margin:12px auto;width:96%}
     }
     @media (max-width:520px){
@@ -89,15 +79,20 @@
   </style>
 </head>
 <body>
-  <!-- topbar -->
+  <!-- topbar with the provided app icon -->
   <div class="topbar" id="topbar" style="display:none">
-    <div class="brand">Chudcord</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="/icons/chudcord.png" alt="Chudcord" style="width:40px;height:40px;border-radius:8px"/>
+      <div class="brand">Chudcord</div>
+    </div>
+
     <div id="topRoom" style="font-weight:600;"></div>
+
     <div class="nav">
       <div id="topUser" style="color:var(--muted)"></div>
       <button id="goProfile" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Profile</button>
       <button id="goHome" class="btn" style="background:rgba(255,255,255,0.06);color:var(--white)">Home</button>
-      <button id="signOutTop" class="btn" style="background:var(--danger);display:none">Sign out</button>
+      <button id="signOutTop" class="btn" style="background:var(--danger);display:none">Clear identity</button>
     </div>
   </div>
 
@@ -110,13 +105,13 @@
           <div id="tabSignIn" style="flex:1;padding:10px;border-radius:10px;text-align:center;background:transparent;cursor:pointer;color:var(--muted)">Sign In</div>
         </div>
 
-        <!-- Sign Up -->
+        <!-- Sign Up (no Auth) -->
         <div id="signupForm">
           <h2 style="margin:0 0 6px 0">Create an account</h2>
-          <p class="muted">Make an account to join the chat.</p>
+          <p class="muted">This site uses Realtime Database only. Your identity is stored locally (no Firebase Authentication).</p>
 
-          <label>Email *</label>
-          <input id="suEmail" class="field" type="email" autocomplete="email" />
+          <label>Email (optional)</label>
+          <input id="suEmail" class="field" type="email" />
 
           <label>Display Name</label>
           <input id="suDisplayName" class="field" placeholder="What others will see" />
@@ -124,8 +119,8 @@
           <label>Username *</label>
           <input id="suUsername" class="field" placeholder="username (no spaces)" />
 
-          <label>Password *</label>
-          <input id="suPassword" class="field" type="password" autocomplete="new-password" />
+          <label>Password (ignored)</label>
+          <input id="suPassword" class="field" type="password" />
 
           <label>Date of Birth *</label>
           <div class="row" style="margin-top:8px">
@@ -143,30 +138,26 @@
             <div class="muted">It's okay to send me updates and tips.</div>
           </div>
 
-          <button id="createAccountBtn" class="btn" style="margin-top:16px">Create Account</button>
-          <div class="muted" style="text-align:center;margin-top:12px">By clicking "Create Account", you agree to the Terms of Service and Privacy Policy.</div>
-          <div style="text-align:center;margin-top:10px"><button id="googleSignUp" class="btn" style="background:rgba(255,255,255,0.06)">Sign in with Google</button></div>
+          <button id="createAccountBtn" class="btn" style="margin-top:16px">Create Account (local)</button>
+          <div class="muted" style="text-align:center;margin-top:12px">This creates a local identity (no password stored on server).</div>
         </div>
 
-        <!-- Sign In -->
+        <!-- Sign In (local) -->
         <div id="signinForm" style="display:none">
-          <h2 style="margin:0 0 6px 0">Sign in</h2>
-          <p class="muted">Welcome back — sign in to continue.</p>
+          <h2 style="margin:0 0 6px 0">Sign in (local)</h2>
+          <p class="muted">Enter your previously chosen username to resume your local identity on this browser.</p>
 
-          <label>Email</label>
-          <input id="siEmail" class="field" type="email" />
+          <label>Username</label>
+          <input id="siUsername" class="field" type="text" />
 
-          <label>Password</label>
-          <input id="siPassword" class="field" type="password" />
+          <label>Display name (optional)</label>
+          <input id="siDisplayName" class="field" type="text" />
 
-          <button id="signInBtn" class="btn" style="margin-top:12px">Sign In</button>
-
+          <button id="signInBtn" class="btn" style="margin-top:12px">Sign In Locally</button>
           <div style="display:flex;justify-content:space-between;margin-top:12px">
-            <div class="muted">Need help? <span id="forgot" style="text-decoration:underline;cursor:pointer">Forgot password</span></div>
-            <div><button id="backToChat" class="btn" style="background:rgba(255,255,255,0.06)">Back to Chat</button></div>
+            <div class="muted">Need help? <span id="forgot" style="text-decoration:underline;cursor:pointer">?</span></div>
+            <div><button id="backToChat" class="btn" style="background:rgba(255,255,255,0.06)">Continue as guest</button></div>
           </div>
-
-          <div style="text-align:center;margin-top:10px"><button id="googleSignIn" class="btn" style="background:rgba(255,255,255,0.06)">Sign in with Google</button></div>
         </div>
       </div>
     </section>
@@ -178,18 +169,17 @@
           <div class="server active">C</div>
           <div class="server">G</div>
           <div class="server">D</div>
-          <div class="server">+</div>
         </div>
 
         <div class="channels" id="channelsPane">
           <header>
             <div>
               <h3 style="margin:0">Community</h3>
-              <div id="userState" style="color:var(--muted);font-size:13px">Not signed in</div>
+              <div id="userState" style="color:var(--muted);font-size:13px">Not set</div>
             </div>
             <div style="display:flex;gap:8px">
               <button id="profileBtn" class="btn" style="background:rgba(255,255,255,0.06)">Profile</button>
-              <button id="signToggle" class="btn" style="background:rgba(255,255,255,0.06)">Sign in</button>
+              <button id="signToggle" class="btn" style="background:rgba(255,255,255,0.06)">Identity</button>
             </div>
           </header>
 
@@ -205,7 +195,7 @@
           <div class="chat-header">
             <div>
               <div id="roomTitle" style="font-weight:600"># general</div>
-              <div id="roomTopic" style="color:var(--muted);font-size:13px">Welcome</div>
+              <div id="roomTopic" style="color:var(--muted);font-size:13px">Realtime Database chat — no Authentication</div>
             </div>
           </div>
 
@@ -226,370 +216,406 @@
 
     <!-- PROFILE view -->
     <section id="view-profile" class="view">
-      <div class="wrap">
-        <aside class="left">
+      <div style="max-width:940px;margin:28px auto;display:flex;gap:20px">
+        <aside style="width:320px;background:var(--panel);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)">
           <div style="display:flex;flex-direction:column;align-items:center">
             <div id="avatarPreview" class="avatar">U</div>
             <input id="fileInput" type="file" accept="image/*" style="display:none" />
-            <button id="changePicBtn" class="btn" style="width:100%">Change Profile Picture</button>
-            <div class="muted" style="text-align:center;margin-top:8px">Accepted: JPG, PNG. Max recommended 5 MB.</div>
+            <button id="changePicBtn" class="btn" style="width:100%;margin-top:8px">Change Profile Picture</button>
+            <div class="muted" style="text-align:center;margin-top:8px">Accepted: JPG, PNG. Max 5 MB.</div>
           </div>
         </aside>
 
-        <section class="right">
+        <section style="flex:1;background:var(--panel);border-radius:12px;padding:18px;border:1px solid rgba(255,255,255,0.03)">
           <h2>Profile Settings</h2>
 
           <label>Display name</label>
           <input id="displayName" class="field"/>
 
-          <label>Username</label>
+          <label>Username (local id)</label>
           <input id="username" class="field" placeholder="username (no spaces)"/>
 
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;margin-top:10px">
             <button id="saveProfileBtn" class="btn">Save</button>
-            <button id="signOutBtn" class="btn" style="background:var(--danger);margin-left:auto">Sign out</button>
+            <button id="clearIdentityBtn" class="btn" style="background:var(--danger);margin-left:auto">Clear local identity</button>
           </div>
 
           <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:16px 0">
 
-          <h3>Security</h3>
-          <label>Change Email</label>
-          <input id="newEmail" class="field" placeholder="new-email@example.com" />
-          <label>Current password (required to re-authenticate)</label>
-          <input id="reauthPassword" class="field" type="password" placeholder="Current password" />
-          <button id="changeEmailBtn" class="btn">Change Email</button>
-          <div class="muted">You will be signed out after changing email.</div>
-
-          <label style="margin-top:12px">Change Password</label>
-          <input id="newPassword" class="field" type="password" placeholder="New password" />
-          <button id="changePasswordBtn" class="btn">Change Password</button>
-
-          <hr style="border:none;height:1px;background:rgba(255,255,255,0.03);margin:16px 0">
-
-          <h3>Account</h3>
-          <button id="deleteAccountBtn" class="btn" style="background:var(--danger)">Delete Account</button>
-          <div class="muted">Delete removes your account and messages. This action cannot be undone.</div>
+          <div class="muted">This app stores a small local identity in your browser (username, display name, small avatar). No Firebase Authentication is used.</div>
         </section>
       </div>
     </section>
   </main>
 
   <script type="module">
-    // IMPORTANT: Serve this page over HTTP/HTTPS (not file://). If you open via file:// imports will fail.
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import {
-      getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
-      signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-      sendEmailVerification, updateProfile, reauthenticateWithCredential,
-      EmailAuthProvider, updateEmail, updatePassword, deleteUser, sendPasswordResetEmail
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-
-    import {
-      getDatabase, ref, push, onChildAdded, query, limitToLast, get, set, serverTimestamp, remove
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-    import {
-      getStorage, ref as sRef, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
-
-    // Firebase config (keep your config here)
-    const firebaseConfig = {
-      apiKey: "AIzaSyClpOt6HnUl0qwFr1NytfuSurhBoagCHL8",
-      authDomain: "chatting-29d11.firebaseapp.com",
-      databaseURL: "https://chatting-29d11-default-rtdb.firebaseio.com",
-      projectId: "chatting-29d11",
-      storageBucket: "chatting-29d11.firebasestorage.app",
-      messagingSenderId: "1018454045492",
-      appId: "1:1018454045492:web:2509f900062e9c15f36b61"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const storage = getStorage(app);
-
-    // UI references
-    const views = { login: document.getElementById('view-login'), chat: document.getElementById('view-chat'), profile: document.getElementById('view-profile') };
-    const topbar = document.getElementById('topbar');
-    const topUser = document.getElementById('topUser');
-    const signOutTop = document.getElementById('signOutTop');
-    const tabSignUp = document.getElementById('tabSignUp'), tabSignIn = document.getElementById('tabSignIn');
-    const signupForm = document.getElementById('signupForm'), signinForm = document.getElementById('signinForm');
-
-    // Login fields
-    const suEmail = document.getElementById('suEmail'), suPassword = document.getElementById('suPassword'), suDisplayName = document.getElementById('suDisplayName'), suUsername = document.getElementById('suUsername');
-    const createAccountBtn = document.getElementById('createAccountBtn'), googleSignUp = document.getElementById('googleSignUp');
-    const siEmail = document.getElementById('siEmail'), siPassword = document.getElementById('siPassword'), signInBtn = document.getElementById('signInBtn'), googleSignIn = document.getElementById('googleSignIn');
-    const forgotEl = document.getElementById('forgot'), backToChat = document.getElementById('backToChat');
-
-    // Chat/profile elements
-    const userState = document.getElementById('userState');
-    const signToggle = document.getElementById('signToggle'), profileBtn = document.getElementById('profileBtn');
-    const messagesEl = document.getElementById('messages'), sendBtn = document.getElementById('sendBtn'), messageInput = document.getElementById('messageInput');
-    const channelList = document.getElementById('channelList');
-    const memberList = document.getElementById('memberList');
-    const roomTitle = document.getElementById('roomTitle');
-
-    // Profile
-    const avatarPreview = document.getElementById('avatarPreview'), fileInput = document.getElementById('fileInput'), changePicBtn = document.getElementById('changePicBtn');
-    const displayNameEl = document.getElementById('displayName'), usernameEl = document.getElementById('username'), saveProfileBtn = document.getElementById('saveProfileBtn'), signOutBtn = document.getElementById('signOutBtn');
-    const newEmailEl = document.getElementById('newEmail'), reauthPasswordEl = document.getElementById('reauthPassword'), changeEmailBtn = document.getElementById('changeEmailBtn');
-    const newPasswordEl = document.getElementById('newPassword'), changePasswordBtn = document.getElementById('changePasswordBtn'), deleteAccountBtn = document.getElementById('deleteAccountBtn');
-
-    let currentUser = null;
-    let currentRoom = 'general';
-
-    // Helper show view
-    function showView(name){
-      Object.values(views).forEach(v => v.classList.remove('active'));
-      views[name].classList.add('active');
-      topbar.style.display = (name === 'chat' || name === 'profile') ? 'flex' : 'none';
-    }
-
-    // Populate DOB selects
-    (function populateDOB(){
-      const dayEl = document.getElementById('dobDay'), yearEl = document.getElementById('dobYear');
-      if (!dayEl || !yearEl) return;
-      for(let d=1; d<=31; d++){ const o=document.createElement('option'); o.textContent=d; o.value=d; dayEl.appendChild(o); }
-      const currentYear = new Date().getFullYear();
-      for(let y=currentYear; y>=1900; y--){ const o=document.createElement('option'); o.textContent=y; o.value=y; yearEl.appendChild(o); }
-    })();
-
-    // Tabs
-    tabSignUp.onclick = () => { tabSignUp.style.background = 'rgba(255,255,255,0.03)'; tabSignIn.style.background='transparent'; signupForm.style.display='block'; signinForm.style.display='none'; }
-    tabSignIn.onclick = () => { tabSignIn.style.background = 'rgba(255,255,255,0.03)'; tabSignUp.style.background='transparent'; signupForm.style.display='none'; signinForm.style.display='block'; }
-
-    // Auth actions
-    googleSignUp.addEventListener('click', async ()=> { await googleSignIn(); });
-    googleSignIn.addEventListener('click', async ()=> { await googleSignIn(); });
-
-    async function googleSignIn(){
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-        location.hash = '#chat';
-      } catch(e){ alert('Google sign-in failed: ' + (e.message || e)); }
-    }
-
-    // Create account (email)
-    createAccountBtn.addEventListener('click', async () => {
-      const email = suEmail.value.trim(), password = suPassword.value, display = suDisplayName.value.trim(), username = suUsername.value.trim();
-      if (!email || !password || !username) return alert('Please fill required fields (email, username, password).');
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        try { await updateProfile(cred.user, { displayName: display || username }); } catch {}
-        try { await sendEmailVerification(cred.user); alert('Account created. Verification email sent.'); } catch { alert('Account created. Please verify via your email.'); }
-        tabSignIn.click();
-      } catch(e){ alert('Sign-up failed: ' + (e.message || e)); }
-    });
-
-    // Sign in (email)
-    signInBtn.addEventListener('click', async () => {
-      const email = siEmail.value.trim(), password = siPassword.value;
-      if (!email || !password) return alert('Enter email and password');
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        location.hash = '#chat';
-      } catch(e){ alert('Sign-in failed: ' + (e.message || e)); }
-    });
-
-    // Forgot password
-    forgotEl.addEventListener('click', async () => {
-      const email = prompt('Enter your email to receive a password reset link:');
-      if (!email) return;
-      try { await sendPasswordResetEmail(auth, email); alert('Password reset email sent.'); } catch(err){ alert('Failed to send reset: ' + (err.message||err)); }
-    });
-
-    // Navigation
-    signToggle.addEventListener('click', ()=> { location.hash = '#login'; });
-    profileBtn.addEventListener('click', ()=> { location.hash = '#profile'; });
-    document.getElementById('goHome').addEventListener('click', ()=> { location.hash = '#chat'; });
-    document.getElementById('backToChat').addEventListener('click', ()=> { location.hash = '#chat'; });
-
-    // Auth state listener
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      if (user) {
-        userState.textContent = user.displayName || user.email;
-        topUser.textContent = user.displayName || user.email;
-        signOutTop.style.display = 'inline-block';
-        set(ref(db, 'presence/' + user.uid), { name: user.displayName || user.email, lastSeen: serverTimestamp() }).catch(()=>{});
-        displayNameEl.value = user.displayName || '';
-        usernameEl.value = (user.displayName || '').replace(/\s+/g,'');
-        if (user.photoURL) { avatarPreview.style.backgroundImage = `url(${user.photoURL})`; avatarPreview.textContent = ''; }
-        else { avatarPreview.style.backgroundImage = ''; avatarPreview.textContent = (user.displayName || user.email || 'U').slice(0,2).toUpperCase(); }
-      } else {
-        userState.textContent = 'Not signed in';
-        topUser.textContent = '';
-        signOutTop.style.display = 'none';
+    // All handlers attach after DOMContentLoaded to avoid race issues
+    document.addEventListener('DOMContentLoaded', () => {
+      // quick check: must be served over http(s)
+      if (location.protocol === 'file:') {
+        alert('Warning: open this page using a local server (http://localhost) or deploy to GitHub Pages. ES modules require HTTP/HTTPS.');
       }
-      applyRouting();
-    });
 
-    // Routing
-    function applyRouting(){
-      const hash = location.hash.replace('#','') || 'chat';
-      if ((hash === 'chat' || hash === 'profile') && !currentUser) { showView('login'); location.hash = '#login'; return; }
-      if (hash === 'login') showView('login');
-      else if (hash === 'chat') showView('chat');
-      else if (hash === 'profile') showView('profile');
-    }
-    window.addEventListener('hashchange', applyRouting);
-    if (!location.hash) location.hash = '#login';
-    applyRouting();
+      // Populate DOB selects (fix earlier bug: day/year duplication)
+      (function populateDOB(){
+        const dayEl = document.getElementById('dobDay'), yearEl = document.getElementById('dobYear');
+        if (!dayEl || !yearEl) return;
+        dayEl.innerHTML = '<option value="">Day</option>';
+        for(let d=1; d<=31; d++){ const o=document.createElement('option'); o.textContent=d; o.value=d; dayEl.appendChild(o); }
+        const currentYear = new Date().getFullYear();
+        yearEl.innerHTML = '<option value="">Year</option>';
+        for(let y=currentYear; y>=1900; y--){ const o=document.createElement('option'); o.textContent=y; o.value=y; yearEl.appendChild(o); }
+      })();
 
-    // Channels and messages
-    channelList.addEventListener('click', (ev) => {
-      const el = ev.target.closest('.channel'); if(!el) return;
-      setActiveChannel(el.dataset.room, el);
-    });
+      // Local identity management (no auth)
+      const UID_KEY = 'chudcord.uid';
+      const NAME_KEY = 'chudcord.name';
+      const USERNAME_KEY = 'chudcord.username';
+      const AVATAR_KEY = 'chudcord.avatar';
 
-    function setActiveChannel(room, el){
-      currentRoom = room;
-      document.querySelectorAll('.channel').forEach(c=>c.classList.remove('active'));
-      el && el.classList.add('active');
-      roomTitle.textContent = '# ' + room;
-      messageInput.placeholder = 'Message #' + room;
-      loadMessages(room);
-      topRoom.textContent = `# ${room}`;
-    }
+      function makeUid(){ return 'u_' + Math.random().toString(36).slice(2,10); }
+      let uid = localStorage.getItem(UID_KEY) || makeUid();
+      localStorage.setItem(UID_KEY, uid);
+      let displayName = localStorage.getItem(NAME_KEY) || '';
+      let username = localStorage.getItem(USERNAME_KEY) || '';
+      let avatarData = localStorage.getItem(AVATAR_KEY) || '';
 
-    sendBtn.addEventListener('click', sendMessage);
-    messageInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+      // UI refs
+      const views = { login: document.getElementById('view-login'), chat: document.getElementById('view-chat'), profile: document.getElementById('view-profile') };
+      const topbar = document.getElementById('topbar');
+      const topUser = document.getElementById('topUser');
+      const signOutTop = document.getElementById('signOutTop');
 
-    async function sendMessage(){
-      const text = messageInput.value.trim(); if(!text) return;
-      if(!currentUser){ location.hash = '#login'; return; }
-      try {
-        await push(ref(db, `rooms/${currentRoom}/messages`), {
-          uid: currentUser.uid,
-          name: currentUser.displayName || currentUser.email,
-          text,
-          ts: Date.now()
-        });
-        messageInput.value = '';
-      } catch(e){ alert('Send failed: ' + (e.message||e)); }
-    }
+      const tabSignUp = document.getElementById('tabSignUp'), tabSignIn = document.getElementById('tabSignIn');
+      const signupForm = document.getElementById('signupForm'), signinForm = document.getElementById('signinForm');
 
-    function loadMessages(room){
-      messagesEl.innerHTML = '';
-      const q = query(ref(db, `rooms/${room}/messages`), limitToLast(200));
-      onChildAdded(q, snap => {
-        const msg = snap.val();
-        appendMessage(msg);
+      const suUsername = document.getElementById('suUsername'), suDisplayName = document.getElementById('suDisplayName'), createAccountBtn = document.getElementById('createAccountBtn');
+      const siUsername = document.getElementById('siUsername'), siDisplayName = document.getElementById('siDisplayName'), signInBtn = document.getElementById('signInBtn');
+      const backToChat = document.getElementById('backToChat');
+      const profileBtn = document.getElementById('profileBtn'), signToggle = document.getElementById('signToggle');
+
+      const userState = document.getElementById('userState');
+
+      const messagesEl = document.getElementById('messages'), sendBtn = document.getElementById('sendBtn'), messageInput = document.getElementById('messageInput');
+      const channelList = document.getElementById('channelList');
+      const memberList = document.getElementById('memberList');
+      const roomTitle = document.getElementById('roomTitle');
+
+      // Profile elements
+      const avatarPreview = document.getElementById('avatarPreview'), fileInput = document.getElementById('fileInput'), changePicBtn = document.getElementById('changePicBtn');
+      const displayNameEl = document.getElementById('displayName'), usernameEl = document.getElementById('username'), saveProfileBtn = document.getElementById('saveProfileBtn'), clearIdentityBtn = document.getElementById('clearIdentityBtn');
+
+      // Show selected view
+      function showView(name){
+        Object.values(views).forEach(v=>v.classList.remove('active'));
+        views[name].classList.add('active');
+        topbar.style.display = (name === 'chat' || name === 'profile') ? 'flex' : 'none';
+      }
+
+      // initialize UI from local storage identity
+      function refreshIdentityUI(){
+        displayName = localStorage.getItem(NAME_KEY) || displayName;
+        username = localStorage.getItem(USERNAME_KEY) || username;
+        avatarData = localStorage.getItem(AVATAR_KEY) || avatarData;
+
+        userState.textContent = displayName ? `${displayName} (${username||'anon'})` : (username ? username : 'No identity');
+        document.getElementById('profileAvatar')?.style && (document.getElementById('profileAvatar').textContent = '');
+        if (avatarData){
+          avatarPreview.style.backgroundImage = `url(${avatarData})`;
+          avatarPreview.textContent = '';
+        } else {
+          avatarPreview.style.backgroundImage = '';
+          avatarPreview.textContent = (displayName || username || uid).slice(0,2).toUpperCase();
+        }
+        // profile fields
+        displayNameEl.value = displayName;
+        usernameEl.value = username;
+      }
+      refreshIdentityUI();
+
+      // Tab switching
+      tabSignUp.addEventListener('click', ()=>{ signupForm.style.display='block'; signinForm.style.display='none'; tabSignUp.style.background='rgba(255,255,255,0.03)'; tabSignIn.style.background='transparent'; });
+      tabSignIn.addEventListener('click', ()=>{ signupForm.style.display='none'; signinForm.style.display='block'; tabSignIn.style.background='rgba(255,255,255,0.03)'; tabSignUp.style.background='transparent'; });
+
+      // Local create account: store identity in localStorage and write to DB users/<uid>/profile and presence
+      createAccountBtn.addEventListener('click', async () => {
+        const uname = (suUsername.value||'').trim();
+        const dname = (suDisplayName.value||'').trim() || uname || ('User'+uid.slice(2,6));
+        if (!uname){ return alert('Please enter a username'); }
+        username = uname; displayName = dname;
+        localStorage.setItem(USERNAME_KEY, username);
+        localStorage.setItem(NAME_KEY, displayName);
+        refreshIdentityUI();
+        // write profile and presence to DB
+        try {
+          await ensureDbWrite(`users/${uid}/profile`, { name: displayName, username, avatar: avatarData, updatedAt: Date.now() });
+          await ensureDbWrite(`presence/${uid}`, { name: displayName, username, avatar: avatarData, lastSeen: Date.now() });
+        } catch(err){
+          console.error(err);
+          alert('Could not save profile to database. Check Realtime DB rules and that you are serving over HTTP/HTTPS.');
+        }
+        showView('chat');
       });
-    }
-    function appendMessage(msg){
-      const el = document.createElement('div'); el.style.marginBottom='12px';
-      const author = document.createElement('div'); author.style.fontWeight='600'; author.textContent=msg.name||'Unknown';
-      const text = document.createElement('div'); text.textContent = msg.text; text.style.color='var(--white)';
-      const ts = document.createElement('div'); ts.style.fontSize='12px'; ts.style.color='var(--muted)'; ts.textContent = new Date(msg.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      el.appendChild(author); el.appendChild(text); el.appendChild(ts);
-      messagesEl.appendChild(el); messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
 
-    // Presence list loader
-    async function loadPresence(){
-      try {
-        const p = await get(ref(db, 'presence'));
-        memberList.innerHTML = '';
-        if (!p.exists()) return;
-        const items = Object.values(p.val());
-        items.forEach(it=>{
-          const m = document.createElement('div'); m.style.display='flex'; m.style.alignItems='center'; m.style.gap='8px'; m.style.padding='6px 0';
-          const a = document.createElement('div'); a.style.width='32px'; a.style.height='32px'; a.style.borderRadius='6px'; a.style.background='rgba(255,255,255,0.03)'; a.style.display='flex'; a.style.alignItems='center'; a.style.justifyContent='center'; a.textContent=(it.name||'U').slice(0,2).toUpperCase();
-          const n = document.createElement('div'); n.textContent = it.name || 'Anonymous'; n.style.color='var(--muted)'; m.appendChild(a); m.appendChild(n); memberList.appendChild(m);
+      // Local "sign in" (resume) — sets local name/username and writes presence
+      signInBtn.addEventListener('click', async () => {
+        const uname = (siUsername.value||'').trim();
+        const dname = (siDisplayName.value||'').trim();
+        if (!uname){ return alert('Enter a username to sign in locally'); }
+        username = uname; if (dname) displayName = dname;
+        localStorage.setItem(USERNAME_KEY, username);
+        localStorage.setItem(NAME_KEY, displayName);
+        refreshIdentityUI();
+        try {
+          await ensureDbWrite(`users/${uid}/profile`, { name: displayName, username, avatar: avatarData, updatedAt: Date.now() });
+          await ensureDbWrite(`presence/${uid}`, { name: displayName, username, avatar: avatarData, lastSeen: Date.now() });
+        } catch(err){
+          console.error(err);
+        }
+        showView('chat');
+      });
+
+      // Continue as guest
+      backToChat.addEventListener('click', () => {
+        if (!displayName && !username) {
+          // assign a quick displayName
+          displayName = 'Guest' + uid.slice(-4);
+          localStorage.setItem(NAME_KEY, displayName);
+        }
+        refreshIdentityUI();
+        showView('chat');
+      });
+
+      // Profile navigation
+      profileBtn.addEventListener('click', ()=> showView('profile'));
+      signToggle.addEventListener('click', ()=> showView('login'));
+      document.getElementById('goHome').addEventListener('click', ()=> showView('chat'));
+      document.getElementById('signOutTop').addEventListener('click', () => {
+        // Clear local identity but keep uid
+        localStorage.removeItem(NAME_KEY);
+        localStorage.removeItem(USERNAME_KEY);
+        localStorage.removeItem(AVATAR_KEY);
+        displayName = username = avatarData = '';
+        refreshIdentityUI();
+        showView('login');
+      });
+
+      // Profile: change picture (resized dataURL)
+      changePicBtn.addEventListener('click', ()=> fileInput.click());
+      fileInput.addEventListener('change', async (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        if (f.size > 5 * 1024 * 1024) return alert('File too large (max 5MB).');
+        const dataUrl = await readImageFileToDataURL(f, 128);
+        avatarData = dataUrl;
+        localStorage.setItem(AVATAR_KEY, avatarData);
+        refreshIdentityUI();
+      });
+
+      // Save profile button
+      saveProfileBtn.addEventListener('click', async () => {
+        const newName = (displayNameEl.value || '').trim();
+        const newUsername = (usernameEl.value || '').trim();
+        if (!newUsername) return alert('Username cannot be empty');
+        username = newUsername; displayName = newName || newUsername;
+        localStorage.setItem(USERNAME_KEY, username);
+        localStorage.setItem(NAME_KEY, displayName);
+        localStorage.setItem(AVATAR_KEY, avatarData || '');
+        refreshIdentityUI();
+        try {
+          await ensureDbWrite(`users/${uid}/profile`, { name: displayName, username, avatar: avatarData || '', updatedAt: Date.now() });
+          await ensureDbWrite(`presence/${uid}`, { name: displayName, username, avatar: avatarData || '', lastSeen: Date.now() });
+          alert('Profile saved.');
+          showView('chat');
+        } catch(err){
+          console.error(err);
+          alert('Failed to save profile to DB. Check Realtime DB rules and HTTP hosting.');
+        }
+      });
+
+      // Clear identity local button
+      clearIdentityBtn.addEventListener('click', () => {
+        localStorage.removeItem(NAME_KEY);
+        localStorage.removeItem(USERNAME_KEY);
+        localStorage.removeItem(AVATAR_KEY);
+        displayName = username = avatarData = '';
+        refreshIdentityUI();
+        alert('Local identity cleared.');
+        showView('login');
+      });
+
+      // UTIL: read image and resize to dataURL
+      function readImageFileToDataURL(file, maxSize=128){
+        return new Promise((resolve,reject)=>{
+          const r = new FileReader();
+          r.onerror = reject;
+          r.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+              let w = img.width, h = img.height;
+              if (w > h && w > maxSize){ h = Math.round(h * (maxSize / w)); w = maxSize; }
+              else if (h > w && h > maxSize){ w = Math.round(w * (maxSize / h)); h = maxSize; }
+              const c = document.createElement('canvas');
+              c.width = w; c.height = h;
+              const ctx = c.getContext('2d');
+              ctx.drawImage(img,0,0,w,h);
+              resolve(c.toDataURL('image/png', 0.9));
+            };
+            img.onerror = reject;
+            img.src = r.result;
+          };
+          r.readAsDataURL(file);
         });
-      } catch(e){ console.warn(e); }
-    }
-    setInterval(loadPresence, 5000); loadPresence();
+      }
 
-    // PROFILE: change picture
-    changePicBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', async (e) => {
-      const f = e.target.files[0]; if (!f) return;
-      if (f.size > 5 * 1024 * 1024) return alert('File too large (max 5MB).');
-      // preview
-      const url = URL.createObjectURL(f);
-      avatarPreview.style.backgroundImage = `url(${url})`;
-      avatarPreview.textContent = '';
-      try {
-        if (!currentUser) throw new Error('Not signed in');
-        const storageRef = sRef(storage, `avatars/${currentUser.uid}/${Date.now()}_${f.name}`);
-        await uploadBytes(storageRef, f);
-        const downloadUrl = await getDownloadURL(storageRef);
-        await updateProfile(currentUser, { photoURL: downloadUrl });
-        await set(ref(db, `users/${currentUser.uid}/profile`), { name: currentUser.displayName || '', photoURL: downloadUrl, updatedAt: serverTimestamp() });
-        alert('Profile picture updated.');
-      } catch (err) { console.error(err); alert('Upload failed: ' + (err.message || err)); }
-    });
+      // ---------------------------------------------------------------------
+      // Firebase Realtime Database usage (no Authentication)
+      // Uses modular SDK but loads inside DOMContentLoaded to avoid early errors
+      // ---------------------------------------------------------------------
+      let db = null;
+      (async function initFirebaseDB(){
+        try {
+          const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js');
+          const dbMod = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js');
+          const { getDatabase, ref, push, onChildAdded, query, limitToLast, set, get } = dbMod;
+          const firebaseConfig = {
+            apiKey: "AIzaSyClpOt6HnUl0qwFr1NytfuSurhBoagCHL8",
+            authDomain: "chatting-29d11.firebaseapp.com",
+            databaseURL: "https://chatting-29d11-default-rtdb.firebaseio.com",
+            projectId: "chatting-29d11",
+            storageBucket: "chatting-29d11.firebasestorage.app",
+            messagingSenderId: "1018454045492",
+            appId: "1:1018454045492:web:2509f900062e9c15f36b61"
+          };
+          initializeApp(firebaseConfig);
+          db = getDatabase();
+          // load default room messages and subscribe
+          subscribeRoom(currentRoom || 'general');
+          // initial presence write (best-effort)
+          try { await ensureDbWrite(`presence/${uid}`, { name: displayName || '', username: username || '', avatar: avatarData || '', lastSeen: Date.now() }); } catch(e){ console.warn('presence write failed', e); }
+          // load presence once
+          loadPresenceOnce();
+        } catch(e){
+          console.error('Firebase DB init failed', e);
+          alert('Failed to initialize Firebase Realtime Database. Open DevTools console for details.');
+        }
+      })();
 
-    // Save display name / username
-    saveProfileBtn.addEventListener('click', async () => {
-      const name = displayNameEl.value.trim();
-      const username = usernameEl.value.trim();
-      if (!username) return alert('Username cannot be empty.');
-      try {
-        await updateProfile(currentUser, { displayName: name || username });
-        await set(ref(db, `users/${currentUser.uid}/profile`), { name: name || username, username, updatedAt: serverTimestamp() });
-        alert('Profile saved.');
-      } catch (err) { console.error(err); alert('Failed to save profile: ' + (err.message || err)); }
-    });
+      // helper to push/update with safe error handling
+      async function ensureDbWrite(path, value){
+        if (!db) throw new Error('DB not initialized');
+        const dbMod = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js');
+        return set(dbMod.ref(db, path), value);
+      }
 
-    // Reauth helper
-    async function reauth(currentEmail, password){
-      const cred = EmailAuthProvider.credential(currentEmail, password);
-      return reauthenticateWithCredential(currentUser, cred);
-    }
+      // send message handler
+      sendBtn.addEventListener('click', sendMessage);
+      messageInput.addEventListener('keydown', function(e){ if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } });
 
-    // Change email
-    changeEmailBtn.addEventListener('click', async () => {
-      const newEmail = newEmailEl.value.trim(), pwd = reauthPasswordEl.value;
-      if (!newEmail || !pwd) return alert('Enter new email and current password to re-authenticate.');
-      try {
-        await reauth(currentUser.email, pwd);
-        await updateEmail(currentUser, newEmail);
-        alert('Email changed. You will be signed out.');
-        await signOut(auth);
-        location.hash = '#login';
-      } catch (err) { console.error(err); alert('Change email failed: ' + (err.message || err)); }
-    });
+      async function sendMessage(){
+        const text = (messageInput.value || '').trim();
+        if (!text) return;
+        const name = displayName || username || ('User'+uid.slice(-4));
+        const msg = { uid, name, username: username||'', avatar: avatarData||'', text, ts: Date.now() };
+        if (!db){
+          alert('Database not ready yet. Wait a moment and try again.');
+          return;
+        }
+        try {
+          const dbMod = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js');
+          await dbMod.push(dbMod.ref(db, `rooms/${currentRoom}/messages`), msg);
+          messageInput.value = '';
+        } catch(err){
+          console.error(err);
+          alert('Failed to send message. Check Realtime DB rules and HTTP hosting.');
+        }
+      }
 
-    // Change password
-    changePasswordBtn.addEventListener('click', async () => {
-      const newPass = newPasswordEl.value, pwd = reauthPasswordEl.value;
-      if (!newPass || !pwd) return alert('Enter your current password and the new password.');
-      try {
-        await reauth(currentUser.email, pwd);
-        await updatePassword(currentUser, newPass);
-        alert('Password changed. You will be signed out.');
-        await signOut(auth);
-        location.hash = '#login';
-      } catch (err) { console.error(err); alert('Change password failed: ' + (err.message || err)); }
-    });
+      // Subscribe to room messages (uses onChildAdded)
+      let currentRoom = 'general';
+      function subscribeRoom(room){
+        if (!db) { setTimeout(()=>subscribeRoom(room), 300); return; }
+        currentRoom = room;
+        messagesEl.innerHTML = '';
+        (async ()=>{
+          const dbMod = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js');
+          const q = dbMod.query(dbMod.ref(db, `rooms/${room}/messages`), dbMod.limitToLast(200));
+          dbMod.onChildAdded(q, snap => {
+            const m = snap.val();
+            if (m) renderMessage(m);
+          });
+        })();
+      }
 
-    // Delete account
-    deleteAccountBtn.addEventListener('click', async () => {
-      const ok = confirm('Are you sure? This will permanently delete your account and content.');
-      if (!ok) return;
-      const pwd = prompt('Enter your password to confirm deletion:');
-      if (!pwd) return alert('Password required.');
-      try {
-        await reauth(currentUser.email, pwd);
-        await set(ref(db, `users/${currentUser.uid}`), null);
-        await set(ref(db, `presence/${currentUser.uid}`), null);
-        await deleteUser(currentUser);
-        alert('Account deleted.');
-        location.hash = '#login';
-      } catch (err) { console.error(err); alert('Delete failed: ' + (err.message || err)); }
-    });
+      // load messages for selected room
+      function loadMessages(room){
+        messagesEl.innerHTML = '';
+        subscribeRoom(room);
+      }
 
-    // small convenience
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && location.hash === '#profile') { location.hash = '#chat'; } });
+      // render message into DOM
+      function renderMessage(m){
+        const el = document.createElement('div');
+        el.style.display='flex'; el.style.gap='10px'; el.style.marginBottom='12px';
+        const av = document.createElement('div'); av.style.width='40px'; av.style.height='40px'; av.style.borderRadius='8px';
+        if (m.avatar){ av.style.backgroundImage = `url(${m.avatar})`; av.style.backgroundSize='cover'; } else { av.style.background='linear-gradient(180deg,#334155,#1f2937)'; av.style.color='white'; av.style.display='flex'; av.style.alignItems='center'; av.style.justifyContent='center'; av.textContent=(m.name||'U').slice(0,2).toUpperCase(); }
+        const body = document.createElement('div');
+        const author = document.createElement('div'); author.style.fontWeight='600'; author.textContent = m.name || 'Unknown';
+        const text = document.createElement('div'); text.textContent = m.text; text.style.marginTop='4px';
+        const ts = document.createElement('div'); ts.className='muted'; ts.style.fontSize='12px'; ts.textContent = new Date(m.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        body.appendChild(author); body.appendChild(text); body.appendChild(ts);
+        el.appendChild(av); el.appendChild(body);
+        messagesEl.appendChild(el);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
 
-    // ensure default channel active
-    setActiveChannel('general', document.querySelector('.channel[data-room="general"]'));
+      // channel switching
+      channelList.addEventListener('click', (ev)=> {
+        const el = ev.target.closest('.channel'); if(!el) return;
+        document.querySelectorAll('.channel').forEach(c=>c.classList.remove('active'));
+        el.classList.add('active');
+        const room = el.dataset.room;
+        roomTitle.textContent = '# ' + room;
+        subscribeRoom(room);
+      });
+
+      // Presence: load once current presence list
+      async function loadPresenceOnce(){
+        if (!db) return;
+        try {
+          const dbMod = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js');
+          const pSnap = await dbMod.get(dbMod.ref(db, 'presence'));
+          memberList.innerHTML = '';
+          if (!pSnap.exists()) return;
+          const val = pSnap.val();
+          for (const k of Object.keys(val)){
+            const it = val[k];
+            const item = document.createElement('div');
+            item.style.display='flex'; item.style.gap='8px'; item.style.alignItems='center'; item.style.marginBottom='8px';
+            const a = document.createElement('div'); a.style.width='36px'; a.style.height='36px'; a.style.borderRadius='6px'; a.style.display='flex'; a.style.alignItems='center'; a.style.justifyContent='center';
+            if (it.avatar){ a.style.backgroundImage = `url(${it.avatar})`; a.style.backgroundSize='cover'; }
+            else { a.style.background='rgba(255,255,255,0.03)'; a.textContent = (it.name||'U').slice(0,2).toUpperCase(); }
+            const n = document.createElement('div'); n.textContent = it.name || 'Anonymous'; n.style.color = 'var(--muted)'; n.style.fontSize='13px';
+            item.appendChild(a); item.appendChild(n);
+            memberList.appendChild(item);
+          }
+        } catch(err){ console.warn('loadPresenceOnce failed', err); }
+      }
+
+      // periodically update our presence entry
+      setInterval(async ()=> {
+        if (!db) return;
+        try {
+          const dbMod = await import('https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js');
+          await dbMod.set(dbMod.ref(db, `presence/${uid}`), { name: displayName || '', username: username || '', avatar: avatarData || '', lastSeen: Date.now() });
+        } catch(err){ /* ignore */ }
+      }, 10000);
+
+      // initial render identity & view
+      refreshIdentityUI();
+      showView('login');
+
+    }); // DOMContentLoaded end
   </script>
 </body>
 </html>
