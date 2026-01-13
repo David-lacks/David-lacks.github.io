@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Demonic Punishment — V3 (Prize stays)</title>
+  <style>
+    :root{
+      --bg1:#070606; --bg2:#130808;
+      --card: rgba(255,255,255,0.02);
+      --red:#ff2d2d; --deep:#a60d0d;
+      --muted:#bfb6b6;
+      --width:360px;
+      --blur-radius:8px;
+      --countdown-size:132px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Segoe UI, system-ui, -apple-system, Roboto, "Helvetica Neue", Arial;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255,45,45,0.03), transparent 8%),
+        radial-gradient(circle at 90% 90%, rgba(166,13,13,0.03), transparent 8%),
+        linear-gradient(120deg,var(--bg1),var(--bg2) 60%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    .card{
+      width:var(--width);
+      max-width:95vw;
+      background:var(--card);
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.7);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+      border:1px solid rgba(255,255,255,0.03);
+      text-align:center;
+      position:relative;
+      transition:filter .24s ease;
+    }
+
+    .blurred { filter: blur(var(--blur-radius)); user-select:none; pointer-events:none; }
+
+    h1{margin:0;font-size:18px;color:#ffecec;letter-spacing:1px;text-transform:uppercase}
+    .muted{color:var(--muted);font-size:13px;margin:0}
+
+    button{
+      width:100%;
+      max-width:280px;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:linear-gradient(90deg,var(--red),var(--deep));
+      color:#111;
+      font-weight:800;
+      cursor:pointer;
+      box-sizing:border-box;
+    }
+    .ghost{
+      background:transparent;
+      color:var(--red);
+      border:1px solid rgba(255,45,45,0.12);
+      font-weight:800;
+    }
+    .dark{
+      background:linear-gradient(180deg,#0b0b0b,#121212);
+      color:#fff;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    .box{
+      width:100%;
+      max-width:280px;
+      padding:10px;
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,20,20,0.02), rgba(0,0,0,0.04));
+      font-weight:700;
+      color:#ffdede;
+      min-height:44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .small{font-size:13px;color:var(--muted)}
+
+    .hidden{display:none !important}
+
+    .spinner{
+      display:inline-block;width:18px;height:18px;border-radius:50%;
+      border:3px solid rgba(255,255,255,0.06);border-top-color:var(--red);
+      animation:spin .9s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* big countdown overlay (numbers remain sharp while rest blurs) */
+    .overlay {
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      pointer-events:none;
+    }
+    .countdown {
+      display:none;
+      z-index:9999;
+      pointer-events:none;
+      color:#fff;
+      font-weight:900;
+      text-align:center;
+      text-shadow: 0 6px 30px rgba(255,0,0,0.08);
+    }
+    .countdown.show {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:var(--countdown-size);
+      width:100%;
+      height:100%;
+      background: rgba(0,0,0,0.0);
+    }
+
+    /* prize rolling strip */
+    .rolling-prize {
+      width:100%;
+      max-width:280px;
+      height:52px;
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.06));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:6px 12px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.02);
+      font-weight:900;
+      color:#ffdede;
+      position:relative;
+    }
+    .prize-text {
+      white-space:nowrap;
+      transform-origin:center;
+      font-size:16px;
+      letter-spacing:0.6px;
+    }
+
+    /* final prize box (stays visible after roll) */
+    .final-prize {
+      width:100%;
+      max-width:280px;
+      padding:10px;
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,45,45,0.04), rgba(0,0,0,0.06));
+      font-weight:900;
+      color:#fff;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:1px solid rgba(255,45,45,0.12);
+    }
+
+    /* confetti canvas */
+    #confetti-canvas{
+      position:fixed; inset:0; pointer-events:none; z-index:9997; display:none;
+    }
+
+    /* success view */
+    .success{
+      width:var(--width);
+      max-width:95vw;
+      padding:22px;
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04));
+      box-shadow:0 12px 48px rgba(0,0,0,0.75);
+      color:#ffdede;
+      text-align:center;
+      display:none;
+      gap:12px;
+    }
+    .success h2{margin:0;font-size:20px}
+    .success p{margin:12px 0 0 0;font-weight:800}
+    .link-btn{margin-top:12px;padding:10px 14px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--red),var(--deep));color:#111;font-weight:800;cursor:pointer}
+
+    @media (max-width:420px){ :root{--countdown-size:88px} }
+  </style>
+</head>
+<body>
+  <!-- big countdown overlay -->
+  <div class="overlay" aria-hidden="true">
+    <div id="big-countdown" class="countdown" role="status" aria-live="assertive"></div>
+  </div>
+
+  <canvas id="confetti-canvas" width="600" height="400" aria-hidden="true"></canvas>
+
+  <main aria-live="polite" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <section class="card" id="main-card" role="region" aria-label="Punishment card">
+      <h1 id="title">Click this button for prize</h1>
+      <p class="muted" id="subtitle">Click to summon.</p>
+
+      <div id="start-area" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px">
+        <button id="start-btn" aria-controls="punish-area">Click for prize</button>
+
+        <!-- rolling animation (cycles visible "prize glimpses") -->
+        <div id="rolling-box" class="rolling-prize hidden" aria-hidden="true">
+          <span class="prize-text" id="prize-roll-text">···</span>
+        </div>
+
+        <!-- final prize (stays after roll) -->
+        <div id="final-prize" class="final-prize hidden" aria-hidden="true"></div>
+      </div>
+
+      <!-- punish area initially hidden and contains no hint at start -->
+      <div id="punish-area" class="hidden" aria-hidden="true" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:10px">
+        <div id="punish-message" class="box hidden" style="font-weight:800">To get the prize you will have to do a Punishment</div>
+
+        <button id="get-punish-btn" class="ghost" aria-live="polite">Get punishment <span aria-hidden="true">😈</span></button>
+
+        <div id="punishment-result" class="box hidden" aria-atomic="true"></div>
+
+        <button id="did-btn" class="dark hidden" style="max-width:220px">I did it — claim</button>
+      </div>
+    </section>
+
+    <section id="success-card" class="success" role="status" aria-live="polite">
+      <h2>You did it mortal</h2>
+      <p>You shall get the prize by the staff</p>
+      <button class="link-btn" id="restart-btn">Back</button>
+    </section>
+  </main>
+
+  <script>
+    // prize list for rolling & final display (stationery-style items only)
+    const prizes = [
+      "Chocolate",
+      "Bookmark",
+      "Pen set",
+      "Sticker pack",
+      "Notebook",
+      "Eraser",
+      "Colored pens",
+      "Cute paperclips",
+      "Pencil",
+      "Washi tape"
+    ];
+
+    // prize glimpses used during roll (same items)
+    const prizeGlances = prizes.slice();
+
+    // punishments (timer and non-timer)
+    const punishments = [
+      { text: "Sing a short song (non-timer)", duration: 0 },
+      { text: "Dance for 10 seconds", duration: 10 },
+      { text: "Do 10 jumping jacks (non-timer)", duration: 0 },
+      { text: "Tell a short joke (non-timer)", duration: 0 },
+      { text: "Hold a silly face for 10 seconds", duration: 10 },
+      { text: "Hum the chorus for 10 seconds", duration: 10 },
+      { text: "Say a tongue twister 3 times (non-timer)", duration: 0 }
+    ];
+
+    // elements
+    const startBtn = document.getElementById('start-btn');
+    const rollingBox = document.getElementById('rolling-box');
+    const rollText = document.getElementById('prize-roll-text');
+    const finalPrizeEl = document.getElementById('final-prize');
+    const punishArea = document.getElementById('punish-area');
+    const punishMessage = document.getElementById('punish-message');
+    const getPunishBtn = document.getElementById('get-punish-btn');
+    const punishmentResult = document.getElementById('punishment-result');
+    const didBtn = document.getElementById('did-btn');
+    const mainCard = document.getElementById('main-card');
+    const successCard = document.getElementById('success-card');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const restartBtn = document.getElementById('restart-btn');
+    const bigCountdown = document.getElementById('big-countdown');
+    const title = document.getElementById('title');
+    const subtitle = document.getElementById('subtitle');
+
+    let rollInterval = null;
+    let activeTimeout = null;
+    let countdownInterval = null;
+    let remaining = 0;
+    let finalPrize = null;
+
+    function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    // Show rolling animation (visual), then pick and SHOW final prize (it stays visible)
+    function startPrizeRoll(duration = 1400, stepMs = 90) {
+      // show rolling box and cycle text rapidly
+      rollingBox.classList.remove('hidden');
+      rollingBox.setAttribute('aria-hidden','false');
+
+      let i = 0;
+      rollText.textContent = prizeGlances[i];
+      rollInterval = setInterval(() => {
+        i = (i + 1) % prizeGlances.length;
+        rollText.textContent = prizeGlances[i];
+      }, stepMs);
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          clearInterval(rollInterval);
+          rollingBox.classList.add('hidden');
+
+          // pick the final prize and show it permanently
+          finalPrize = pickRandom(prizes);
+          finalPrizeEl.textContent = `Prize: ${finalPrize}`;
+          finalPrizeEl.classList.remove('hidden');
+          finalPrizeEl.setAttribute('aria-hidden','false');
+
+          resolve();
+        }, duration);
+      });
+    }
+
+    // Start: roll prize visuals and show final prize, then reveal punish area
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      if (rollInterval) clearInterval(rollInterval);
+
+      await startPrizeRoll(1400, 90);
+
+      // reveal punish area after prize shown
+      punishArea.classList.remove('hidden');
+      punishArea.setAttribute('aria-hidden','false');
+      punishMessage.classList.remove('hidden');
+      title.textContent = "A cost has been chosen";
+      subtitle.textContent = "Complete it to claim the prize";
+
+      // remove start from tab flow
+      startBtn.setAttribute('aria-hidden','true');
+
+      setTimeout(()=> { try { getPunishBtn.focus(); } catch(e){} }, 160);
+    });
+
+    // Big 5-second prep overlay (blurs main UI while numbers remain sharp)
+    function showPrepCountdown(prepSeconds = 5) {
+      return new Promise((resolve) => {
+        mainCard.classList.add('blurred');
+        bigCountdown.classList.add('show');
+
+        let n = prepSeconds;
+        bigCountdown.textContent = n;
+
+        const tick = setInterval(() => {
+          n--;
+          if (n >= 1) bigCountdown.textContent = n;
+          else bigCountdown.textContent = 'GO';
+        }, 1000);
+
+        setTimeout(() => {
+          clearInterval(tick);
+          bigCountdown.classList.remove('show');
+          mainCard.classList.remove('blurred');
+          resolve();
+        }, prepSeconds * 1000);
+      });
+    }
+
+    // When "Get punishment" pressed
+    getPunishBtn.addEventListener('click', async () => {
+      const pick = pickRandom(punishments);
+      // remove button permanently
+      getPunishBtn.remove();
+
+      // show the pick text (minimal)
+      punishmentResult.classList.remove('hidden');
+      punishmentResult.textContent = pick.text;
+
+      if (pick.duration && pick.duration > 0) {
+        // prep 5s countdown overlay (big numbers) and blur main UI
+        await showPrepCountdown(5);
+
+        // start actual punishment timer
+        remaining = pick.duration;
+        const countdownNode = document.createElement('div');
+        countdownNode.style.fontWeight = '900';
+        countdownNode.style.marginLeft = '6px';
+        countdownNode.textContent = `${remaining}s`;
+        punishmentResult.appendChild(countdownNode);
+
+        countdownInterval = setInterval(() => {
+          remaining--;
+          if (remaining >= 0) countdownNode.textContent = `${remaining}s`;
+        }, 1000);
+
+        activeTimeout = setTimeout(() => {
+          clearInterval(countdownInterval);
+          // finish tone
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.value = 880;
+            o.connect(g);
+            g.connect(ctx.destination);
+            g.gain.setValueAtTime(0.0001, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+            o.start();
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.7);
+            o.stop(ctx.currentTime + 0.75);
+          } catch (e){}
+
+          didBtn.classList.remove('hidden');
+          didBtn.focus();
+        }, pick.duration * 1000 + 250);
+
+      } else {
+        // non-timer: reveal "I did it" immediately
+        didBtn.classList.remove('hidden');
+        didBtn.focus();
+      }
+    });
+
+    // Confetti
+    function runConfetti(duration = 1400) {
+      const canvas = confettiCanvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      canvas.style.display = 'block';
+
+      const count = Math.floor((canvas.width / 40) * 1.2);
+      const particles = [];
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * -canvas.height,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 6 + 2,
+          size: Math.random() * 10 + 6,
+          color: ['#ff3b3b','#ffdede','#ff9b9b','#ffffff'][Math.floor(Math.random()*4)],
+          rot: Math.random() * Math.PI * 2
+        });
+      }
+
+      let start = null;
+      function frame(t) {
+        if (!start) start = t;
+        const elapsed = t - start;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += 0.06;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+          ctx.restore();
+        });
+        if (elapsed < duration) {
+          requestAnimationFrame(frame);
+        } else {
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          canvas.style.display = 'none';
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // On "I did it"
+    didBtn.addEventListener('click', () => {
+      if (activeTimeout) clearTimeout(activeTimeout);
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.value = 660;
+        o.connect(g);
+        g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+        o.stop(ctx.currentTime + 0.65);
+      } catch(e){}
+
+      runConfetti(1200);
+
+      setTimeout(() => {
+        mainCard.style.display = 'none';
+        successCard.style.display = 'flex';
+        successCard.style.flexDirection = 'column';
+        successCard.style.alignItems = 'center';
+      }, 900);
+    });
+
+    restartBtn.addEventListener('click', () => {
+      location.reload();
+    });
+
+    // keyboard accessibility
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const active = document.activeElement;
+        if (active && active.tagName === 'BUTTON') active.click();
+      }
+    });
+
+    // responsive countdown size
+    function adjustCountdownSize() {
+      const w = Math.min(window.innerWidth, 600);
+      const size = Math.max(72, Math.floor(w / 4));
+      document.documentElement.style.setProperty('--countdown-size', size + 'px');
+    }
+    window.addEventListener('resize', adjustCountdownSize);
+    adjustCountdownSize();
+  </script>
+</body>
+</html>
